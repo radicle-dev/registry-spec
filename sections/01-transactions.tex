@@ -3,14 +3,14 @@
 
 All transactions on the registry take the form $\tx{transaction}{arg_1, \ldots,
 arg_n}$, where $arg_1, \ldots arg_n$ are the \emph{inputs} and $\sigma$ is the
-\textsf{Ed25519} signature of the author of the transaction. Transactions
+\textsf{EdDSA} signature of the author of the transaction. Transactions
 always have an \emph{author} and an \emph{origin}, which is the account of
 their author.
 
 Transactions can be uniquely identified by their \emph{hash}.
 
 \subsection{Transfer}
-The act of transfering coins between two accounts:
+The act of transferring coins between two accounts:
 \[
     \tx{transfer}{\field{A}{id}, v}
 \]
@@ -69,15 +69,15 @@ transaction is of the form:
 \]
 where:
 \begin{itemize}
-\item $\field{C}{prev}$ is the hash of the previous contribution, or
-  $\varnothing$ if this is the first contribution to the whole
-  project. Note that $\field{P}{contribs}$'s first item must be linked to the last
-  contribution in the project's \emph{previous} checkpoint such that no
-  gaps between contributions exist.
-\item $\field{C}{hash}$ is the hash of the corresponding commit,
-\item $\field{C}{author}$ is the author of the contribution,
-\item $\field{C}{sig}$ is the author's signature,
-\item $\field{C}{signoff}$ is the \emph{signoff key}, which must be $\in P_K$.
+    \item $\field{C}{prev}$ is the hash of the previous contribution, or
+      $\varnothing$ if this is the first contribution to the whole
+      project. Note that $\field{P}{contribs}$'s first item must be linked to the last
+      contribution in the project's \emph{previous} checkpoint such that no
+      gaps between contributions exist.
+    \item $\field{C}{hash}$ is the hash of the corresponding commit,
+    \item $\field{C}{author}$ is the author of the contribution,
+    \item $\field{C}{sig}$ is the author's signature,
+    \item $\field{C}{signoff}$ is the \emph{signoff key}, which must be $\in P_K$.
 \end{itemize}
 
 A contribution must be signed by the signoff key. This signals
