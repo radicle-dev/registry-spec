@@ -1,0 +1,215 @@
+\section{Transactions}
+\label{s:transactions}
+
+All transactions on the registry take the form $\tx{transaction}{arg_1, \ldots,
+arg_n}$, where $arg_1, \ldots arg_n$ are the \emph{inputs} and $\sigma$ is the
+\textsf{Ed25519} signature of the author of the transaction. Transactions
+always have an \emph{author} and an \emph{origin}, which is the account of
+their author.
+
+Transactions can be uniquely identified by their \emph{hash}.
+
+\subsection{Transfer}
+The act of transfering coins between two accounts:
+\[
+    \tx{transfer}{\field{A}{id}, v}
+\]
+which will transfer value from the author's account to account $A$.
+
+\inputs
+\begin{itemize}
+    \item $\field{A}{id}$ is the account id of the \emph{receiver} of the transfer,
+    \item $v$ is the value or `balance' to transfer, in the smallest denomination.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{A}{id}$ is a valid account id,
+    \item $A$ is an account with a balance $\geq 0$,
+    \item $v$ is the value or `balance' to transfer, in the smallest denomination.
+    \item The author's account balance minus any transaction fee is $\geq v$.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $v$ is debited from the author's account and credited to $A$.
+\end{itemize}
+
+\subsection{Checkpoint}
+\label{s:checkpoint}
+The act of notarizing project state and updating the network graph:
+\[
+    \tx{checkpoint}{\field{P}{id}, \field{P}{hash}, \field{P}{version}, \field{P}{contribs}, \field{P}{deps}}
+\]
+\inputs
+\begin{itemize}
+    \item $\field{P}{id}$ is the \emph{id} of the project being checkpointed,
+    \item $\field{P}{hash}$ is the new \emph{hash} of the project state,
+    \item $\field{P}{version}$ is the new \emph{version} of the project,
+    \item $\field{P}{contribs}$ is the list of contributions since the last checkpoint,
+    \item $\field{P}{deps}$ is the list of dependency updates since the last checkpoint.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item{$\field{P}{id}$ refers to an existing project in the registry.}
+    \item{$\field{P}{hash}$ is a valid hash that hasn't been used in a previous
+        project checkpoint.}
+    \item{$\field{P}{version}$ is a string between $1$ and $32$ bytes long that
+        hasn't been used in a previous project checkpoint.}
+    \item{$\field{P}{contribs}$ is a valid contribution list (See \S
+        \ref{s:checkpoint-contribs}).}
+    \item{$\field{P}{deps}$ is a valid dependency update list (See \S
+        \ref{s:checkpoint-deps}).}
+\end{itemize}
+
+\subsubsection{Contributions}
+The list $\field{P}{contribs}$ supplied to the $\mathsf{checkpoint}$
+transaction is of the form:
+
+\[
+    [\tuple{\field{C}{prev}, \field{C}{hash}, \field{C}{author}, \field{C}{sig}, \field{C}{signoff}}]
+\]
+where:
+\begin{itemize}
+\item $\field{C}{prev}$ is the hash of the previous contribution, or
+  $\varnothing$ if this is the first contribution to the whole
+  project. Note that $\field{P}{contribs}$'s first item must be linked to the last
+  contribution in the project's \emph{previous} checkpoint such that no
+  gaps between contributions exist.
+\item $\field{C}{hash}$ is the hash of the corresponding commit,
+\item $\field{C}{author}$ is the author of the contribution,
+\item $\field{C}{sig}$ is the author's signature,
+\item $\field{C}{signoff}$ is the \emph{signoff key}, which must be $\in P_K$.
+\end{itemize}
+
+A contribution must be signed by the signoff key. This signals
+the contribution has been reviewed and verified by the maintainer. The
+checkpoint itself must also be signed by a key in $P_K$.
+
+Because all changes to a project's source code are described in checkpoints, it
+is possible to reconstruct a full hash-linked list of contributions for the
+entire project. When cross-referenced with the project's repository, this
+constitutes a complete historical record of who authored what code, and which
+maintainer signed off on the contribution. This ensures the project history is
+auditable and tamper-proof, while providing fundamental information to
+\osrank{}. Note that only contribution \emph{metadata} is stored
+on-chain.
+
+\subsubsection{Dependency updates}
+\label{s:checkpoint-deps}
+Conceptually, a project $P$ depends on another project $P'$ if it is an
+``input'' to $P$ in some way: $P$ references $P'$ or parts of $P'$ in its
+source code, or $P'$ is a build/test dependency.
+
+The dependency update list $\field{P}{deps}$ is a list of \emph{dependency
+  updates}, one of:
+\[
+    \begin{cases}
+        \depend(\field{P'}{name}, \field{P'}{version}) \\
+        \undepend(\field{P'}{name}, \field{P'}{version})
+    \end{cases}
+\]
+which refer to the project $P'$ at a specific version $\field{P'}{version}$.
+The $\depend$ update adds a new dependency while the $\undepend$ update removes
+a dependency. The updates are processed in order with $\depend$ only being
+valid if it adds a dependency that the project does not already have and
+$\undepend$ only being valid for current dependencies. The checkpoint is
+invalid if the update list contains duplicates.
+
+% NOTE: Should the checkpoints include the hash of the project being depended
+% on? This would add another check for projects registering.
+
+\bigskip
+\validation
+\begin{itemize}
+    \item $\field{P'}{name}$ must be a valid project name, but \emph{does not}
+        have to refer to an existing name in the registry. This allows dependent
+        projects to checkpoint dependencies that have not yet been registered.
+    \item $\field{P'}{version}$ must be a valid version string, but \emph{does not}
+        have to refer to an existing version of $P'$. This allows dependent projects
+        to checkpoint before their dependencies.
+\end{itemize}
+
+As a project maintainer, adding a dependency signals a variety of things
+depending of the nature of the project:
+\begin{itemize}
+\item They have verified that $P$ indeed depends on this specific
+  version of $P'$.
+\item That $P'$ is suitable as a dependency for $P$, \eg{} if $P$ has
+  very high security requirements, that $P'$ fulfills these.
+\end{itemize}
+\noindent Since contributions to a project carry additional
+weight---potentially increasing a project's \osrank{}---there is an incentive
+for maintainers to checkpoint their projects regularly.  Similarly, adding
+dependencies may increase connectivity in the network graph, which may in turn
+indirectly improve a project's \osrank{}.
+
+\subsection{Register domain}
+The act of registering a top-level domain:
+\[
+    \tx{register\hbox{-}domain}{domain}
+\]
+\inputs
+\begin{itemize}
+    \item $domain$ is the unique domain being registered.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $domain$ must be available for registration, between $1$ and $32$
+        characters long, and valid UTF-8.
+\end{itemize}
+For example,
+\[
+    \tx{register\hbox{-}domain}{\mathtt{crates}}
+\]
+
+\subsection{Claim}
+The act of making a request for a name under a \emph{TLD} (top-level domain):
+\[
+    \tx{claim}{name, domain},
+\]
+\inputs
+\begin{itemize}
+    \item $name$ is the unique name being requested,
+    \item $domain$ is the domain under which the name is being requested.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $name$ must be unique, \ie not currently registered under $domain$,
+        between $1$ and $32$ characters long, and valid UTF-8.
+    \item $domain$ must be an existing domain.
+\end{itemize}
+For example,
+\[
+    \tx{claim}{\mathtt{criterion}, \mathtt{crates}}
+\]
+which will request \texttt{criterion.crates}.
+
+\subsection{Accept/reject claim}
+The act of accepting or rejecting a claim:
+\[
+    \tx{accept\hbox{-}claim}{\field{C}{id}}
+\]
+or
+\[
+    \tx{reject\hbox{-}claim}{\field{C}{id}}
+\]
+where $C$ is the claim being accepted or rejected.
+
+\inputs
+\begin{itemize}
+    \item $\field{C}{id}$ is the \emph{transaction hash} of the claim.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{C}{id}$ must be the hash of an existing transaction of
+        type $\mathsf{claim}$.
+        The claim $C$ must be in a $pending$ state, \ie it must not have
+        been already accepted or rejected.
+\end{itemize}
+
+\subsection{Identify}
+The act of identifying yourself as a contributor, by linking a public key used
+to sign project contributions, to an account in the registry.
+
+% Questions
+% - Does a project need to register, or can it simply checkpoint?
+% - What happens when a project forks? Can we share checkpoints? What is the project id then?

@@ -1,0 +1,100 @@
+\documentclass[a4paper, oneside, 1jpt, final]{amsart}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[babel=true,kerning=true]{microtype}
+
+\usepackage{amsmath, amssymb}
+\usepackage{eucal}
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{amsaddr}
+\usepackage{standalone}
+\usepackage{caption}
+
+\usepackage{stmaryrd}
+\usepackage[noend]{algpseudocode}
+
+\def\osrank{\textsc{\small{osrank}}}
+\def\Oscoin{\textsc{\small{Oscoin}}}
+\def\oscoin{\textsc{\small{oscoin}}}
+\def\netgraph{\mathcal{N}}
+\def\accounts{\mathcal{A}}
+\def\state{\mathcal{S}}
+\def\ledger{\mathcal{L}}
+\def\contributors{\mathcal{C}}
+\def\projs{\mathcal{P}}
+\def\miners{\mathcal{M}}
+\def\registry{\mathcal{R}}
+\def\bal{\mathsf{bal}}
+\def\depend{\mathsf{depend}}
+\def\undepend{\mathsf{undepend}}
+\def\seedset{\Upsilon}
+\def\epoch{\kappa}
+\def\pagerank{PageRank}
+\def\protocol{\Phi}
+
+\newcommand{\tuple}[1]{\langle#1\rangle}
+\newcommand{\mathsc}[1]{\text{\normalfont\scshape#1}}
+\newcommand{\dep}{\xrightharpoondown[e]{d}}
+\newcommand{\tx}[2]{\mathsf{#1}\lparen#2\rparen_\sigma}
+\newcommand{\field}[2]{#1_{\mathsf{#2}}}
+\newcommand{\fn}[2]{\operatorname{#1}(#2)}
+\newcommand{\prop}[2]{#1.{\mathrm{#2}}}
+
+\newcommand*\eg{e.g.\ }
+\newcommand*\ie{i.e.\ }
+
+\newcommand{\inputs}{\noindent\textsc{\small{inputs}}}
+\newcommand{\outputs}{\noindent\textsc{\small{outputs}}}
+\newcommand{\validation}{\noindent\textsc{\small{validation}}}
+\newcommand{\example}{\textsc{\small{example}}}
+
+\algrenewcommand\algorithmicprocedure{\textbf{handler}}
+
+% No paragraph indentation after section headers.
+\makeatletter
+\let\@afterindenttrue\@afterindentfalse
+\makeatother
+
+\newenvironment{fig}
+  {\par\noindent\minipage{\linewidth}}
+  {\endminipage\bigskip}
+
+\setlist[description]{leftmargin=0.8cm, labelindent=\parindent}
+\setlist[itemize]{leftmargin=0.8cm, labelindent=\parindent}
+\setlist[enumerate]{leftmargin=0.8cm, labelindent=\parindent}
+
+\setlength{\textwidth}{\paperwidth}
+\addtolength{\textwidth}{-4cm}
+\setlength{\textheight}{\paperheight}
+\addtolength{\textheight}{-4cm}
+\addtolength{\footskip}{\baselineskip}
+
+\def\labelitemi{--}
+
+\raggedcolumns
+\calclayout
+
+\makeatletter
+\let\@wraptoccontribs\wraptoccontribs
+\makeatother
+
+\begin{document}
+
+\title[Radicle Registry]{Radicle Registry \\ \vspace{0.5em}\Small{Specification} \\ {\tiny version 0.1 -- September 2019}}
+\author{\Small Monadic\textsuperscript{$\dagger$}}
+
+\thanks{\textsuperscript{$\dagger$}Monadic, \texttt{team@monadic.xyz}}
+
+\maketitle
+
+\setlength{\columnsep}{1cm}
+\begin{multicols}{2}
+
+\input{sections/01-transactions.tex}
+
+\end{multicols}
+\end{document}
