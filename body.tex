@@ -236,10 +236,13 @@ The act of registering a project under a unique name and domain:
 \[
     \tx{register\hbox{-}project}{\field{P}{name}, \field{P}{domain}, \field{P}{checkpoint}}
 \]
+
 \inputs
 \begin{itemize}
-    \item $\field{P}{name}$ is the unique name being requested,
-    \item $\field{P}{domain}$ is the domain under which the name is being requested,
+    \item $\field{P}{name}$ is the unique name being requested, where
+    \item $\field{P}{domain}$ is the domain under which $\field{P}{name}$ is
+        being registered, which together form the unique identifier
+        $\field{P}{id}$,
     \item $\field{P}{checkpoint}$ is the id of the latest checkpoint
         representing this project.
 \end{itemize}
