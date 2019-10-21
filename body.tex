@@ -57,8 +57,9 @@ further modified in the initial protocol.
 
 All transactions on the registry take the form $\tx{transaction}{arg_1, \ldots,
 arg_n}$, where $arg_1, \ldots arg_n$ are the \emph{inputs} and $\sigma$ is the
-\textsf{EdDSA} signature of the author of the transaction. Transactions
-always have an \emph{author} and an \emph{origin}, which is the author's account.
+\textsf{EdDSA} signature of the author of the transaction. Transactions always
+have an \emph{author} and an \emph{origin} (formally $\alpha$), which is the
+author's account.
 
 Transactions can be uniquely identified by their \emph{hash}.
 
@@ -67,7 +68,7 @@ The act of transferring coins between two accounts:
 \[
     \tx{transfer}{\field{A}{id}, v}
 \]
-which will transfer value from the transaction \emph{origin} to account $A$.
+which will transfer value from the transaction origin $\alpha$ to account $A$.
 
 \spec{
     \inputs
@@ -221,7 +222,7 @@ The act of registering a top-level domain:
 \end{itemize}
 \validation
 \begin{itemize}
-    \item The transaction \emph{origin} is a member of $\root$,
+    \item The transaction origin $\alpha$ is a member of $\root$,
     \item $domain$ must be available for registration, between $1$ and $32$
         characters long, and valid \textsf{UTF-8}.
 \end{itemize}
