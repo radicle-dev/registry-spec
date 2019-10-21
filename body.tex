@@ -268,7 +268,6 @@ or
     \tx{reject\hbox{-}project}{\field{t}{hash}}
 \]
 
-\columnbreak
 \inputs
 \begin{itemize}
     \item $\field{t}{hash}$ is the \emph{transaction hash} of the
@@ -287,7 +286,34 @@ or
 
 \subsection{Identify}
 The act of identifying yourself as a contributor, by linking a public key used
-to sign project contributions, to an account in the registry.
+to sign project contributions, to an account in the registry:
+\[
+    \tx{identify}{\field{I}{pk}, \field{I}{sig}}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{I}{pk}$ is the public key that is to be associated with
+            the \emph{origin} account $\alpha$ if this transaction succeeds.
+        \item $\field{I}{sig}$ is a signature verifying that the transaction
+            author owns $\field{I}{pk}$.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{I}{pk}$ is not already associated with an account,
+        \item $\field{I}{sig}$ is $\alpha_{id}$ signed by the secret key $sk$ that
+            $\field{I}{pk}$ was derived from. In other words,
+            \[
+                \field{I}{sig} = \mathsf{encrypt(hash(\alpha_{id}), \mathit{sk})}
+            \]
+            which is valid if
+            \[
+                \mathsf{decrypt}(\field{I}{sig}, \field{I}{pk}) \equiv
+                    \mathsf{hash(\alpha_{id})}
+            \]
+    \end{itemize}}
+
 
 % Questions
 % - Does a project need to register, or can it simply checkpoint?
