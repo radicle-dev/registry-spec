@@ -30,12 +30,19 @@ An account $A$ is a tuple:
         \item $\field{A}{id}$ is the unique account identifier obtained by hashing
             the account owner's public key,
         \item $\field{A}{nonce}$ is a number which starts at $0$ and is incremented
-            every time a transaction originates from this account,
+            every time a transaction originates from this account.
         \item $\field{A}{bal}$ is the account's balance in the smallest denomination,
             and $\field{A}{bal} \in \nat_{\geq 0}$.
     \end{itemize}}
-
-The set of all accounts is $\accounts$.
+The set of all accounts is $\accounts$. Accounts are never created or destroyed,
+rather, if they have never been used to transact, they have an initial state of:
+\[
+    A = \tuple{\field{A}{id}, 0, 0}
+\]
+Hence, for all valid account ids, there exists an account with that id. Note that
+accounts can \emph{never be removed}, since that would violate the invariant that
+nonces are only ever incremented, and removing an account is equivalent to setting
+$\field{A}{nonce}$ and $\field{A}{bal}$ to $0$.
 
 \section{Transactions}
 \label{s:transactions}
