@@ -73,13 +73,12 @@ which will transfer value from the transaction \emph{origin} to account $A$.
     \inputs
     \begin{itemize}
         \item $\field{A}{id}$ is the account id of the \emph{receiver} of the transfer,
-        \item $v$ is the value or `balance' to transfer from the origin, in the
-            smallest denomination.
+        \item $v$ is the value or `balance' to transfer from the origin to the receiver,
+            in the smallest denomination.
     \end{itemize}
 
     \validation
     \begin{itemize}
-        \item $\field{A}{id}$ is valid, in other words $A \in \accounts$,
         \item The transfer balance is positive, or $v \geq 1$,
         \item The origin's balance minus any transaction fee is $\geq v$.
     \end{itemize}
