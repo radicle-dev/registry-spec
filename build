@@ -2,3 +2,4 @@
 
 mkdir -p out
 pdflatex -output-directory=out -interaction=errorstopmode -halt-on-error main.tex
+cp out/main.pdf out/rad-egistry-spec-$(git rev-parse --short HEAD).pdf
