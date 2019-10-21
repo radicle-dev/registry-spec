@@ -1,11 +1,49 @@
+\section{Projects}
+A project $P$ is a tuple:
+\[
+    P = \tuple{\field{P}{id}, \field{P}{checkpoint}, \field{P}{account}, \field{P}{contract}}
+\]
+
+\spec{
+    \definition
+    \begin{itemize}
+        \item $\field{P}{id}$ is the unique project identifier, defined as
+            $\tuple{\field{P}{name}, \field{P}{domain}}$,
+        \item $\field{P}{checkpoint}$ is the $id$ of the latest project checkpoint,
+            or $\varnothing$ if the project hasn't been checkpointed yet,
+        \item $\field{P}{account}$ is the project account or \emph{fund},
+        \item $\field{P}{contract}$ is the project contract, which governs permissions
+            around the project, as well as its fund.
+    \end{itemize}}
+
+Projects are created with the \textsf{register-project} transaction.
+
+\section{Accounts}
+An account $A$ is a tuple:
+\[
+    A = \tuple{\field{A}{id}, \field{A}{nonce}, \field{A}{bal}}
+\]
+
+\spec{
+    \definition
+    \begin{itemize}
+        \item $\field{A}{id}$ is the unique account identifier obtained by hashing
+            the account owner's public key,
+        \item $\field{A}{nonce}$ is a number which starts at $0$ and is incremented
+            every time a transaction originates from this account,
+        \item $\field{A}{bal}$ is the account's balance in the smallest denomination,
+            and $\field{A}{bal} \in \nat_{\geq 0}$.
+    \end{itemize}}
+
+The set of all accounts is $\accounts$.
+
 \section{Transactions}
 \label{s:transactions}
 
 All transactions on the registry take the form $\tx{transaction}{arg_1, \ldots,
 arg_n}$, where $arg_1, \ldots arg_n$ are the \emph{inputs} and $\sigma$ is the
 \textsf{EdDSA} signature of the author of the transaction. Transactions
-always have an \emph{author} and an \emph{origin}, which is the account of
-their author.
+always have an \emph{author} and an \emph{origin}, which is the author's account.
 
 Transactions can be uniquely identified by their \emph{hash}.
 
@@ -14,84 +52,101 @@ The act of transferring coins between two accounts:
 \[
     \tx{transfer}{\field{A}{id}, v}
 \]
-which will transfer value from the author's account to account $A$.
+which will transfer value from the transaction \emph{origin} to account $A$.
 
-\inputs
-\begin{itemize}
-    \item $\field{A}{id}$ is the account id of the \emph{receiver} of the transfer,
-    \item $v$ is the value or `balance' to transfer, in the smallest denomination.
-\end{itemize}
-\validation
-\begin{itemize}
-    \item $\field{A}{id}$ is a valid account id,
-    \item $A$ is an account with a balance $\geq 0$,
-    \item $v$ is the value or `balance' to transfer, in the smallest denomination.
-    \item The author's account balance minus any transaction fee is $\geq v$.
-\end{itemize}
-\outputs
-\begin{itemize}
-    \item $v$ is debited from the author's account and credited to $A$.
-\end{itemize}
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{A}{id}$ is the account id of the \emph{receiver} of the transfer,
+        \item $v$ is the value or `balance' to transfer from the origin, in the
+            smallest denomination.
+    \end{itemize}
+
+    \validation
+    \begin{itemize}
+        \item $\field{A}{id}$ is valid, in other words $A \in \accounts$,
+        \item The transfer balance is positive, or $v \geq 1$,
+        \item The origin's balance minus any transaction fee is $\geq v$.
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $v$ is debited from the origin and credited to $A$.
+    \end{itemize}
+}
 
 \subsection{Checkpoint}
 \label{s:checkpoint}
-The act of notarizing project state and updating the network graph:
+The act of notarizing a project's state and updating the network graph:
 \[
-    \tx{checkpoint}{\field{P}{id}, \field{P}{hash}, \field{P}{version}, \field{P}{contribs}, \field{P}{deps}}
+    \tx{checkpoint}{\field{K}{parent}, \field{K}{hash}, \field{K}{version},
+    \field{K}{contribs}, \field{K}{deps}}
 \]
+Checkpoints form a chain going from the latest checkpoint to the first.
+
 \inputs
 \begin{itemize}
-    \item $\field{P}{id}$ is the \emph{id} of the project being checkpointed,
-    \item $\field{P}{hash}$ is the new \emph{hash} of the project state,
-    \item $\field{P}{version}$ is the new \emph{version} of the project,
-    \item $\field{P}{contribs}$ is the list of contributions since the last checkpoint,
-    \item $\field{P}{deps}$ is the list of dependency updates since the last checkpoint.
+    \item $\field{K}{parent}$ is the \emph{id} of the previous or `parent' checkpoint,
+    \item $\field{K}{hash}$ is the new \emph{hash} of the project state,
+    \item $\field{K}{version}$ is the new \emph{version} of the project,
+    \item $\field{K}{contribs}$ is the list of contributions since $\field{K}{parent}$,
+    \item $\field{K}{deps}$ is the list of dependency updates since the $\field{K}{parent}$.
 \end{itemize}
 \validation
 \begin{itemize}
-    \item{$\field{P}{id}$ refers to an existing project in the registry.}
-    \item{$\field{P}{hash}$ is a valid hash that hasn't been used in a previous
-        project checkpoint.}
-    \item{$\field{P}{version}$ is a string between $1$ and $32$ bytes long that
+    \item{$\field{K}{parent}$ refers to an existing checkpoint in the registry,
+        or is $\varnothing$.}
+    \item{$\field{K}{hash}$ is a valid hash that hasn't been used in a parent
+        checkpoint.}
+    \item{$\field{K}{version}$ is a string between $1$ and $32$ bytes long that
         hasn't been used in a previous project checkpoint.}
-    \item{$\field{P}{contribs}$ is a valid contribution list (See \S
+    \item{$\field{K}{contribs}$ is a valid contribution list (See \S
         \ref{s:checkpoint-contribs}).}
-    \item{$\field{P}{deps}$ is a valid dependency update list (See \S
+    \item{$\field{K}{deps}$ is a valid dependency update list (See \S
         \ref{s:checkpoint-deps}).}
 \end{itemize}
 
 \subsubsection{Contributions}
-The list $\field{P}{contribs}$ supplied to the $\mathsf{checkpoint}$
+\label{s:checkpoint-contribs}
+The list $\field{K}{contribs}$ supplied to the $\mathsf{checkpoint}$
 transaction is of the form:
 
 \[
-    [\tuple{\field{C}{prev}, \field{C}{hash}, \field{C}{author}, \field{C}{sig}, \field{C}{signoff}}]
+    \field{K}{contribs} = [\tuple{\field{C}{parent}, \field{C}{hash},
+    \field{C}{author}, \field{C}{sig}}],
 \]
-where:
-\begin{itemize}
-    \item $\field{C}{prev}$ is the hash of the previous contribution, or
-      $\varnothing$ if this is the first contribution to the whole
-      project. Note that $\field{P}{contribs}$'s first item must be linked to the last
-      contribution in the project's \emph{previous} checkpoint such that no
-      gaps between contributions exist.
-    \item $\field{C}{hash}$ is the hash of the corresponding commit,
-    \item $\field{C}{author}$ is the author of the contribution,
-    \item $\field{C}{sig}$ is the author's signature,
-    \item $\field{C}{signoff}$ is the \emph{signoff key}, which must be $\in P_K$.
-\end{itemize}
 
-A contribution must be signed by the signoff key. This signals
-the contribution has been reviewed and verified by the maintainer. The
-checkpoint itself must also be signed by a key in $P_K$.
+\spec{
+    \definition
+    \begin{itemize}
+        \item $\field{C}{parent}$ is the hash of the parent contribution, or
+            $\varnothing$ if this is the first contribution of the first checkpoint
+            of the project.
+        \item $\field{C}{hash}$ is the hash of the corresponding commit,
+        \item $\field{C}{author}$ is the public signing key of the commit referred
+            to by $C$,
+        \item $\field{C}{sig}$ is the author's \textsf{GPG} signature.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{C}{parent}$ is a valid \textsf{SHA-1} hash or
+            $\varnothing$ if this is the first contribution. Note that if $C$
+            is $\field{K}{contribs}$'s first item, and $C'$ is the \emph{last}
+            item of the \emph{parent} checkpoint's contributions list, then
+            $\field{C'}{hash}$ and $\field{C}{parent}$ must be equal, such that
+            no gaps between contributions exist.
 
+        \item $\field{C}{hash}$ is a valid \textsf{SHA-1} hash,
+        \item $\field{C}{author}$ is the creator of $\field{C}{sig}$,
+        \item $\field{C}{sig}$ is a valid signature of $\field{C}{hash}$.
+    \end{itemize}
+}
 Because all changes to a project's source code are described in checkpoints, it
 is possible to reconstruct a full hash-linked list of contributions for the
 entire project. When cross-referenced with the project's repository, this
-constitutes a complete historical record of who authored what code, and which
-maintainer signed off on the contribution. This ensures the project history is
-auditable and tamper-proof, while providing fundamental information to
-\osrank{}. Note that only contribution \emph{metadata} is stored
-on-chain.
+constitutes a complete historical record of who authored what code. This
+ensures the project history is auditable and tamper-proof, while providing
+fundamental information to for the network graph $\netgraph$. Note that only
+contribution \emph{metadata} is stored on-chain.
 
 \subsubsection{Dependency updates}
 \label{s:checkpoint-deps}
@@ -103,8 +158,8 @@ The dependency update list $\field{P}{deps}$ is a list of \emph{dependency
   updates}, one of:
 \[
     \begin{cases}
-        \depend(\field{P'}{name}, \field{P'}{version}) \\
-        \undepend(\field{P'}{name}, \field{P'}{version})
+        \depend(\field{P'}{id}, \field{P'}{version}) \\
+        \undepend(\field{P'}{id}, \field{P'}{version})
     \end{cases}
 \]
 which refer to the project $P'$ at a specific version $\field{P'}{version}$.
@@ -120,14 +175,13 @@ invalid if the update list contains duplicates.
 \bigskip
 \validation
 \begin{itemize}
-    \item $\field{P'}{name}$ must be a valid project name, but \emph{does not}
-        have to refer to an existing name in the registry. This allows dependent
+    \item $\field{P'}{id}$ must be a valid project id, but \emph{does not}
+        have to refer to an existing id in the registry. This allows dependent
         projects to checkpoint dependencies that have not yet been registered.
     \item $\field{P'}{version}$ must be a valid version string, but \emph{does not}
         have to refer to an existing version of $P'$. This allows dependent projects
         to checkpoint before their dependencies.
 \end{itemize}
-
 As a project maintainer, adding a dependency signals a variety of things
 depending of the nature of the project:
 \begin{itemize}
@@ -137,10 +191,10 @@ depending of the nature of the project:
   very high security requirements, that $P'$ fulfills these.
 \end{itemize}
 \noindent Since contributions to a project carry additional
-weight---potentially increasing a project's \osrank{}---there is an incentive
+weight---potentially increasing a project's rank---there is an incentive
 for maintainers to checkpoint their projects regularly.  Similarly, adding
 dependencies may increase connectivity in the network graph, which may in turn
-indirectly improve a project's \osrank{}.
+indirectly improve a project's rank.
 
 \subsection{Register domain}
 The act of registering a top-level domain:
@@ -161,49 +215,57 @@ For example,
     \tx{register\hbox{-}domain}{\mathtt{crates}}
 \]
 
-\subsection{Claim}
-The act of making a request for a name under a \emph{TLD} (top-level domain):
+\subsection{Register project}
+The act of registering a project under a unique name and domain:
 \[
-    \tx{claim}{name, domain},
+    \tx{register\hbox{-}project}{\field{P}{name}, \field{P}{domain}, \field{P}{checkpoint}}
 \]
 \inputs
 \begin{itemize}
-    \item $name$ is the unique name being requested,
-    \item $domain$ is the domain under which the name is being requested.
+    \item $\field{P}{name}$ is the unique name being requested,
+    \item $\field{P}{domain}$ is the domain under which the name is being requested,
+    \item $\field{P}{checkpoint}$ is the id of the latest checkpoint
+        representing this project.
 \end{itemize}
 \validation
 \begin{itemize}
-    \item $name$ must be unique, \ie not currently registered under $domain$,
-        between $1$ and $32$ characters long, and valid UTF-8.
-    \item $domain$ must be an existing domain.
+    \item $\field{P}{name}$ must be unique, \ie not currently registered under
+        $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
+        \textsf{UTF-8},
+    \item $\field{P}{domain}$ must be an existing domain,
+    \item $\field{P}{checkpoint}$ must be an existing checkpoint.
 \end{itemize}
 For example,
 \[
-    \tx{claim}{\mathtt{criterion}, \mathtt{crates}}
+    \tx{register\hbox{-}project}{\mathtt{rand}, \mathtt{crates}, \mathtt{0xf9e6ae}\cdots}
 \]
-which will request \texttt{criterion.crates}.
+which will request \texttt{rand.crates} and associate it with
+checkpoint $\mathtt{0xf9e6ae}\cdots$.
 
-\subsection{Accept/reject claim}
-The act of accepting or rejecting a claim:
+\subsection{Accept/reject project}
+The act of accepting or rejecting a project being registered:
 \[
-    \tx{accept\hbox{-}claim}{\field{C}{id}}
+    \tx{accept\hbox{-}project}{\field{t}{hash}}
 \]
 or
 \[
-    \tx{reject\hbox{-}claim}{\field{C}{id}}
+    \tx{reject\hbox{-}project}{\field{t}{hash}}
 \]
-where $C$ is the claim being accepted or rejected.
 
+\columnbreak
 \inputs
 \begin{itemize}
-    \item $\field{C}{id}$ is the \emph{transaction hash} of the claim.
+    \item $\field{t}{hash}$ is the \emph{transaction hash} of the
+        \textsf{register\hbox{-}project} transaction $t$ of a project
+        being accepted or rejected.
 \end{itemize}
 \validation
 \begin{itemize}
-    \item $\field{C}{id}$ must be the hash of an existing transaction of
-        type $\mathsf{claim}$.
-        The claim $C$ must be in a $pending$ state, \ie it must not have
-        been already accepted or rejected.
+    \item $\field{t}{hash}$ must be the hash of an existing transaction of
+        type \textsf{register\hbox{-}project},
+    \item $t$ must not have been previously accepted or rejected, in other
+        words there can be at most one \textsf{accept\hbox{-}project} or
+        \textsf{reject\hbox{-}project} for each $t$.
 \end{itemize}
 
 \subsection{Identify}

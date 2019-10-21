@@ -17,9 +17,6 @@
 \usepackage{stmaryrd}
 \usepackage[noend]{algpseudocode}
 
-\def\osrank{\textsc{\small{osrank}}}
-\def\Oscoin{\textsc{\small{Oscoin}}}
-\def\oscoin{\textsc{\small{oscoin}}}
 \def\netgraph{\mathcal{N}}
 \def\accounts{\mathcal{A}}
 \def\state{\mathcal{S}}
@@ -35,6 +32,7 @@
 \def\epoch{\kappa}
 \def\pagerank{PageRank}
 \def\protocol{\Phi}
+\def\nat{\mathbb{N}}
 
 \newcommand{\tuple}[1]{\langle#1\rangle}
 \newcommand{\mathsc}[1]{\text{\normalfont\scshape#1}}
@@ -48,9 +46,17 @@
 \newcommand*\ie{i.e.\ }
 
 \newcommand{\inputs}{\noindent\textsc{\small{inputs}}}
+\newcommand{\definition}{\noindent\textsc{\small{definition}}}
 \newcommand{\outputs}{\noindent\textsc{\small{outputs}}}
 \newcommand{\validation}{\noindent\textsc{\small{validation}}}
-\newcommand{\example}{\textsc{\small{example}}}
+\newcommand{\example}{\noindent\textsc{\small{example}}\newline}
+
+\newcommand{\spec}[1]{
+    \smallskip
+    \setlist[itemize]{leftmargin=5mm}
+    #1
+    \smallskip
+}
 
 \algrenewcommand\algorithmicprocedure{\textbf{handler}}
 
