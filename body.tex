@@ -44,6 +44,14 @@ accounts can \emph{never be removed}, since that would violate the invariant tha
 nonces are only ever incremented, and removing an account is equivalent to setting
 $\field{A}{nonce}$ and $\field{A}{bal}$ to $0$.
 
+\subsection{Root accounts}
+Some accounts are considered \emph{privileged}. These `root' accounts,
+formally $\root \subset \accounts$ are authorized to conduct certain transactions
+that are only valid when originating from these accounts.
+
+The set of accounts in $\root$ is defined at \emph{genesis}, and may not be
+further modified in the initial protocol.
+
 \section{Transactions}
 \label{s:transactions}
 
@@ -214,8 +222,9 @@ The act of registering a top-level domain:
 \end{itemize}
 \validation
 \begin{itemize}
+    \item The transaction \emph{origin} is a member of $\root$,
     \item $domain$ must be available for registration, between $1$ and $32$
-        characters long, and valid UTF-8.
+        characters long, and valid \textsf{UTF-8}.
 \end{itemize}
 For example,
 \[
@@ -268,6 +277,7 @@ or
 \end{itemize}
 \validation
 \begin{itemize}
+    \item The transaction \emph{origin} is a member of $\root$,
     \item $\field{t}{hash}$ must be the hash of an existing transaction of
         type \textsf{register\hbox{-}project},
     \item $t$ must not have been previously accepted or rejected, in other
