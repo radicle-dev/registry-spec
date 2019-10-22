@@ -92,7 +92,7 @@ Projects are created with the \textsf{register-project} transaction.
 \subsection{Registering}
 The act of registering a project under a unique name and domain:
 \[
-    \tx{register\hbox{-}project}{\field{P}{name}, \field{P}{domain}, \field{P}{checkpoint}}
+    \tx{register-project}{\field{P}{name}, \field{P}{domain}, \field{P}{checkpoint}}
 \]
 
 \inputs
@@ -114,7 +114,7 @@ The act of registering a project under a unique name and domain:
 \end{itemize}
 For example,
 \[
-    \tx{register\hbox{-}project}{\mathtt{rand}, \mathtt{crates}, \mathtt{0xf9e6ae}\cdots}
+    \tx{register-project}{\mathtt{rand}, \mathtt{crates}, \mathtt{0xf9e6ae}\cdots}
 \]
 which will request \texttt{rand.crates} and associate it with
 checkpoint $\mathtt{0xf9e6ae}\cdots$.
@@ -122,27 +122,27 @@ checkpoint $\mathtt{0xf9e6ae}\cdots$.
 \subsection{Accepting \& rejecting a project}
 The act of accepting or rejecting a project being registered:
 \[
-    \tx{accept\hbox{-}project}{\field{t}{hash}}
+    \tx{accept-project}{\field{t}{hash}}
 \]
 or
 \[
-    \tx{reject\hbox{-}project}{\field{t}{hash}}
+    \tx{reject-project}{\field{t}{hash}}
 \]
 
 \inputs
 \begin{itemize}
     \item $\field{t}{hash}$ is the \emph{transaction hash} of the
-        \textsf{register\hbox{-}project} transaction $t$ of a project
+        \textsf{register-project} transaction $t$ of a project
         being accepted or rejected.
 \end{itemize}
 \validation
 \begin{itemize}
     \item The transaction \emph{origin} is a member of $\root$,
     \item $\field{t}{hash}$ must be the hash of an existing transaction of
-        type \textsf{register\hbox{-}project},
+        type \textsf{register-project},
     \item $t$ must not have been previously accepted or rejected, in other
-        words there can be at most one \textsf{accept\hbox{-}project} or
-        \textsf{reject\hbox{-}project} for each $t$.
+        words there can be at most one \textsf{accept-project} or
+        \textsf{reject-project} for each $t$.
 \end{itemize}
 
 \subsection{Checkpointing}
@@ -272,7 +272,7 @@ indirectly improve a project's rank.
 \subsection{Registering a domain}
 The act of registering a top-level domain:
 \[
-    \tx{register\hbox{-}domain}{domain}
+    \tx{register-domain}{domain}
 \]
 \inputs
 \begin{itemize}
@@ -286,7 +286,7 @@ The act of registering a top-level domain:
 \end{itemize}
 For example,
 \[
-    \tx{register\hbox{-}domain}{\mathtt{crates}}
+    \tx{register-domain}{\mathtt{crates}}
 \]
 
 \section{Identity}
