@@ -43,7 +43,7 @@ that are only valid when originating from these accounts.
 The set of accounts in $\root$ is defined at \emph{genesis}, and may not be
 further modified in the initial protocol.
 
-\subsection{Transfer}
+\subsection{Transferring value}
 The act of transferring coins between two accounts:
 \[
     \tx{transfer}{\field{A}{id}, v}
@@ -89,7 +89,7 @@ A project $P$ is a tuple:
 
 Projects are created with the \textsf{register-project} transaction.
 
-\subsection{Register project}
+\subsection{Registering}
 The act of registering a project under a unique name and domain:
 \[
     \tx{register\hbox{-}project}{\field{P}{name}, \field{P}{domain}, \field{P}{checkpoint}}
@@ -119,7 +119,7 @@ For example,
 which will request \texttt{rand.crates} and associate it with
 checkpoint $\mathtt{0xf9e6ae}\cdots$.
 
-\subsection{Accept/reject project}
+\subsection{Accepting \& rejecting a project}
 The act of accepting or rejecting a project being registered:
 \[
     \tx{accept\hbox{-}project}{\field{t}{hash}}
@@ -145,7 +145,7 @@ or
         \textsf{reject\hbox{-}project} for each $t$.
 \end{itemize}
 
-\subsection{Checkpoint}
+\subsection{Checkpointing}
 \label{s:checkpoint}
 The act of notarizing a project's state and updating the network graph:
 \[
@@ -269,7 +269,7 @@ indirectly improve a project's rank.
 
 \section{Names}
 
-\subsection{Register domain}
+\subsection{Registering a domain}
 The act of registering a top-level domain:
 \[
     \tx{register\hbox{-}domain}{domain}
@@ -291,7 +291,7 @@ For example,
 
 \section{Identity}
 
-\subsection{Identify}
+\subsection{Identifying as a contributor}
 The act of identifying yourself as a contributor, by linking a public key used
 to sign project contributions, to an account in the registry:
 \[
@@ -321,7 +321,7 @@ to sign project contributions, to an account in the registry:
             \]
     \end{itemize}}
 
-\subsection{Forget}
+\subsection{Forgetting identities}
 When a public key associated with the \textsf{identify} transaction is lost or no
 longer used, the following transaction will `forget' the association:
 \[
