@@ -80,8 +80,9 @@ A project $P$ is a tuple:
     \begin{itemize}
         \item $\field{P}{id}$ is the unique project identifier, defined as
             $\tuple{\field{P}{name}, \field{P}{domain}}$,
-        \item $\field{P}{checkpoint}$ is the $id$ of the latest project checkpoint,
-            or $\varnothing$ if the project hasn't been checkpointed yet,
+        \item $\field{P}{checkpoint}$ is the $id$ of the latest project
+            checkpoint, or $\varnothing$ if the project hasn't been
+            checkpointed yet (See \S\ref{s:checkpoint}),
         \item $\field{P}{account}$ is the project account or \emph{fund},
         \item $\field{P}{contract}$ is the project contract, which governs permissions
             around the project, as well as its fund.
@@ -266,6 +267,49 @@ weight---potentially increasing a project's rank---there is an incentive
 for maintainers to checkpoint their projects regularly.  Similarly, adding
 dependencies may increase connectivity in the network graph, which may in turn
 indirectly improve a project's rank.
+
+\subsection{Setting the project checkpoint}
+The act of updating the project to point to a new checkpoint:
+\[
+    \tx{set-checkpoint}{\field{P}{id}, k'}
+\]
+which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{P}{id}$ is the id of the project being updated,
+        \item $k'$ is the id of the checkpoint the project
+            should be associated to.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{P}{id}$ refers to a project that has been accepted
+            in the registry,
+        \item $k'$ refers to a checkpoint which links back to the same initial
+            checkpoint as the previous project checkpoint $k$.
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\field{P}{checkpoint} = k'$
+    \end{itemize}}
+
+\subsection{Updating the project contract}
+The act of updating a project's contract:
+\[
+    \tx{set-contract}{\field{P}{id}, c}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{P}{id}$ is the id of the project,
+        \item $c$ is the new contract.
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\field{P}{contract} = c$
+    \end{itemize}}
 
 \section{Names}
 
