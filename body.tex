@@ -128,8 +128,15 @@ The act of registering a project under a unique name and domain:
     \item $\field{P}{domain}$ must be an existing domain,
     \item $\field{P}{k}$ must represent an existing checkpoint.
 \end{itemize}
+\outputs
+\begin{itemize}
+    \item $P \in \pending$, where $\pending$ is the set of registrations that
+        are in a ``pending'' state, waiting to be accepted or rejected (See
+        \S\ref{s:accepting-projects}).
+\end{itemize}
 
 \subsection{Accepting and rejecting a project}
+\label{s:accepting-projects}
 The act of accepting or rejecting a project being registered:
 \[
     \tx{accept-project}{\field{t}{hash}}
@@ -142,17 +149,15 @@ or
 \inputs
 \begin{itemize}
     \item $\field{t}{hash}$ is the \emph{transaction hash} of the
-        \textsf{register-project} transaction $t$ of a project
+        \textsf{register-project} transaction $t$ of a project $P$
         being accepted or rejected.
 \end{itemize}
 \validation
 \begin{itemize}
     \item The transaction \emph{origin} is a member of $\root$,
     \item $\field{t}{hash}$ must be the hash of an existing transaction of
-        type \textsf{register-project},
-    \item $t$ must not have been previously accepted or rejected, in other
-        words there can be at most one \textsf{accept-project} or
-        \textsf{reject-project} for each $t$.
+        type \textsf{register-project}. In other words, $P \in \pending$,
+        where $P$ is the project being registered.
 \end{itemize}
 
 \bigskip
@@ -160,6 +165,7 @@ or
 \newline\outputs
 \begin{itemize}
     \item $P \in \projects$
+    \item $P \notin \pending$
     \item $\field{P}{account} = \tuple{\field{A}{id}, 0, 0}$
 \end{itemize}
 \bigskip
@@ -167,6 +173,7 @@ or
 \newline\outputs
 \begin{itemize}
     \item $P \notin \projects$
+    \item $P \notin \pending$
 \end{itemize}
 
 \subsection{Checkpointing}
