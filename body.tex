@@ -85,8 +85,15 @@ A project $P$ is a tuple:
             $\tuple{\field{P}{name}, \field{P}{domain}}$,
         \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
         \item $\field{P}{account}$ is the project account or \emph{fund},
-        \item $\field{P}{contract}$ is the project contract, which governs permissions
-            around the project, as well as its fund.
+        \item $\field{P}{contract}$ is the project contract, which governs
+            permissions around the project, as well as its fund. It can be
+            invoked as a function which takes a transaction $t$ as input, and
+            returns an output in $\{\top, \bot\}$, or:
+            \[
+                \field{P}{contract}(t) \to \{\top, \bot\}.
+            \]
+            An output of $\top$ signifies \emph{authorized}, while $\bot$ is for
+            \emph{unauthorized}.
         \item $\field{P}{proof}$ is the proof that was supplied during registration,
             verifying the owner's authority over the project,
         \item $\field{P}{meta}$ is a dictionary of additional metadata to associate
@@ -109,7 +116,9 @@ The act of registering a project under a unique name and domain:
     \item $\field{P}{domain}$ is the domain under which $\field{P}{name}$ is
         being registered, which together form the unique identifier
         $\field{P}{id}$,
-    \item $\field{P}{k}$ is the id of the \emph{checkpoint} representing this project.
+    \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
+        with this project, formally $k_0$. This checkpoint must always remain
+        in the project ancestry.
 \end{itemize}
 \validation
 \begin{itemize}
@@ -300,12 +309,13 @@ which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
     \begin{itemize}
         \item $\field{P}{id}$ refers to a project that has been accepted
             in the registry,
-        \item $k'$ refers to a checkpoint which links back to the same initial
-            checkpoint as the previous project checkpoint $k$.
+        \item $k'$ is a checkpoint which has the original project checkpoint
+            $k_0$ in its ancestry.
+        \item $\field{P}{contract}(\tx{set-checkpoint}{\field{P}{id}, k'}) \equiv \top$
     \end{itemize}
     \outputs
     \begin{itemize}
-        \item $\field{P}{checkpoint} = k'$
+        \item $\field{P}{k} = k'$
     \end{itemize}}
 
 \subsection{Updating the project contract}
@@ -319,6 +329,11 @@ The act of updating a project's contract:
     \begin{itemize}
         \item $\field{P}{id}$ is the id of the project,
         \item $c$ is the new contract.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \projects$,
+        \item $\field{P}{contract}(\tx{set-contract}{\field{P}{id}, c}) \equiv \top$
     \end{itemize}
     \outputs
     \begin{itemize}
