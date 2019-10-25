@@ -30,10 +30,12 @@ rather, if they have never been used to transact, they have an initial state of:
 \[
     A = \tuple{\field{A}{id}, 0, 0}
 \]
-Hence, for all valid account ids, there exists an account with that id. Note that
-accounts can \emph{never be removed}, since that would violate the invariant that
-nonces are only ever incremented, and removing an account is equivalent to setting
-$\field{A}{nonce}$ and $\field{A}{bal}$ to $0$.
+Hence, for all valid account ids, there exists an account with that id. In other
+words, $\forall a \in \field{A}{id} (A \in \accounts)$.
+
+Note that accounts can \emph{never be removed}, since that would violate the
+invariant that nonces are only ever incremented, and removing an account is
+equivalent to setting $\field{A}{nonce}$ and $\field{A}{bal}$ to $0$.
 
 \subsection{Root accounts}
 Some accounts are considered \emph{privileged}. These `root' accounts,
@@ -72,7 +74,8 @@ which will transfer value from the transaction origin $\alpha$ to account $A$.
 \section{Projects}
 A project $P$ is a tuple:
 \[
-    P = \tuple{\field{P}{id}, \field{P}{checkpoint}, \field{P}{account}, \field{P}{contract}}
+    P = \tuple{\field{P}{id}, \field{P}{k}, \field{P}{account},
+        \field{P}{contract}, \field{P}{proof}, \field{P}{meta}}
 \]
 
 \spec{
@@ -80,30 +83,33 @@ A project $P$ is a tuple:
     \begin{itemize}
         \item $\field{P}{id}$ is the unique project identifier, defined as
             $\tuple{\field{P}{name}, \field{P}{domain}}$,
-        \item $\field{P}{checkpoint}$ is the $id$ of the latest project
-            checkpoint, or $\varnothing$ if the project hasn't been
-            checkpointed yet (See \S\ref{s:checkpoint}),
+        \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
         \item $\field{P}{account}$ is the project account or \emph{fund},
         \item $\field{P}{contract}$ is the project contract, which governs permissions
             around the project, as well as its fund.
+        \item $\field{P}{proof}$ is the proof that was supplied during registration,
+            verifying the owner's authority over the project,
+        \item $\field{P}{meta}$ is a dictionary of additional metadata to associate
+            with the project, for example the \radicle{} \emph{project id}.
+            $\field{P}{meta}$ is \emph{immutable} once defined.
     \end{itemize}}
+Projects are created with the \textsf{register-project} transaction.  The set
+of all projects is $\projects$.
 
-Projects are created with the \textsf{register-project} transaction.
-
-\subsection{Registering}
+\subsection{Project registration}
 The act of registering a project under a unique name and domain:
 \[
-    \tx{register-project}{\field{P}{name}, \field{P}{domain}, \field{P}{checkpoint}}
+    \tx{register-project}{\field{P}{id}, \field{P}{k}, \field{P}{proof}, \field{P}{meta}}
 \]
 
 \inputs
 \begin{itemize}
+    \item $\field{P}{id} = \tuple{\field{P}{name}, \field{P}{domain}}$
     \item $\field{P}{name}$ is the unique name being requested, where
     \item $\field{P}{domain}$ is the domain under which $\field{P}{name}$ is
         being registered, which together form the unique identifier
         $\field{P}{id}$,
-    \item $\field{P}{checkpoint}$ is the id of the latest checkpoint
-        representing this project.
+    \item $\field{P}{k}$ is the id of the \emph{checkpoint} representing this project.
 \end{itemize}
 \validation
 \begin{itemize}
@@ -111,16 +117,10 @@ The act of registering a project under a unique name and domain:
         $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
         \textsf{UTF-8},
     \item $\field{P}{domain}$ must be an existing domain,
-    \item $\field{P}{checkpoint}$ must be an existing checkpoint.
+    \item $\field{P}{k}$ must represent an existing checkpoint.
 \end{itemize}
-For example,
-\[
-    \tx{register-project}{\mathtt{rand}, \mathtt{crates}, \mathtt{0xf9e6ae}\cdots}
-\]
-which will request \texttt{rand.crates} and associate it with
-checkpoint $\mathtt{0xf9e6ae}\cdots$.
 
-\subsection{Accepting \& rejecting a project}
+\subsection{Accepting and rejecting a project}
 The act of accepting or rejecting a project being registered:
 \[
     \tx{accept-project}{\field{t}{hash}}
@@ -144,6 +144,20 @@ or
     \item $t$ must not have been previously accepted or rejected, in other
         words there can be at most one \textsf{accept-project} or
         \textsf{reject-project} for each $t$.
+\end{itemize}
+
+\bigskip
+\noindent For \textsf{accept-project},
+\newline\outputs
+\begin{itemize}
+    \item $P \in \projects$
+    \item $\field{P}{account} = \tuple{\field{A}{id}, 0, 0}$
+\end{itemize}
+\bigskip
+\noindent For \textsf{reject-project},
+\newline\outputs
+\begin{itemize}
+    \item $P \notin \projects$
 \end{itemize}
 
 \subsection{Checkpointing}
