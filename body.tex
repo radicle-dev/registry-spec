@@ -110,7 +110,9 @@ The act of registering a project under a unique name and domain:
 \[
     \tx{register-project}{\field{P}{id}, \field{P}{k}, \field{P}{proof}, \field{P}{meta}}
 \]
+This transaction requires a deposit $\deposit{register-project}$.
 
+\spec{
 \inputs
 \begin{itemize}
     \item $\field{P}{id} = \tuple{\field{P}{name}, \field{P}{domain}}$
@@ -128,14 +130,17 @@ The act of registering a project under a unique name and domain:
         $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
         \textsf{UTF-8},
     \item $\field{P}{domain}$ must be an existing domain,
-    \item $\field{P}{k}$ must represent an existing checkpoint.
+    \item $\field{P}{k}$ must represent an existing checkpoint,
+    \item $\alpha_{bal} \geq \deposit{register-project}$.
 \end{itemize}
 \outputs
 \begin{itemize}
     \item $P \in \pending$, where $\pending$ is the set of registrations that
         are in a ``pending'' state, waiting to be accepted or rejected (See
-        \S\ref{s:accepting-projects}).
-\end{itemize}
+        \S\ref{s:accepting-projects}). Note that $\pending$ and $\projects$
+        are disjoint,
+    \item $\alpha_{bal'} = \alpha_{bal} - \deposit{register-project}$.
+\end{itemize}}
 
 \subsection{Accepting and rejecting a project}
 \label{s:accepting-projects}
@@ -436,7 +441,7 @@ that was $\field{K}{contribs}$, with $\tuple{\field{C}{hash}, \field{C}{author},
         [\tuple{\field{C}{hash}, \field{C}{author}, \field{C}{sig}}]
     ),
 \]
-where \textsf{hash} is a \emph{Merkle} hash function. $\field{K}{contribs}$ is
+where \textsf{hash} is a Merkle hash function. $\field{K}{contribs}$ is
 now constant-sized. Note that in this alternative model, $\field{C}{parent}$ is
 no longer used, since it can't be verified.
 
