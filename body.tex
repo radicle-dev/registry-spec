@@ -87,13 +87,15 @@ A project $P$ is a tuple:
         \item $\field{P}{account}$ is the project account or \emph{fund},
         \item $\field{P}{contract}$ is the project contract, which governs
             permissions around the project, as well as its fund. It can be
-            invoked as a function which takes a transaction $t$ as input, and
-            returns an output in $\{\top, \bot\}$, or:
+            described as a function:
             \[
-                \field{P}{contract}(t) \to \{\top, \bot, \nat\}.
+                f : T \to \{\top, \bot\} \cup \nat.
             \]
-            An output of $\top$ signifies \emph{authorized}, while $\bot$ is for
-            \emph{unauthorized}.
+            where $T$ is any verified transaction.  An output of $\top$
+            signifies a transaction $t \in T$ is \emph{authorized}, while
+            $\bot$ means \emph{unauthorized}. An output of type $\nat$ is
+            reserved for transactions that should trigger a transfer of
+            funds. In that case $\nat$ is the set of valid values to transfer.
         \item $\field{P}{proof}$ is the proof that was supplied during registration,
             verifying the owner's authority over the project,
         \item $\field{P}{meta}$ is a dictionary of additional metadata to associate
