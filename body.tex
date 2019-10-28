@@ -185,7 +185,13 @@ The act of notarizing a project's state and updating the network graph:
     \tx{checkpoint}{\field{K}{parent}, \field{K}{hash}, \field{K}{version},
     \field{K}{contribs}, \field{K}{deps}}
 \]
-Checkpoints form a chain going from the latest checkpoint to the first.
+Checkpoints within the scope of a single project form a chain going from the
+latest, or ``current'' checkpoint $k_{n-1}$ to the first and original
+checkpoint $k_0$.
+
+From the perspective of $k_0$, we can talk of a checkpoint \emph{tree}, since
+due to their nature, they are able to represent branching. Hence, the original
+checkpoint $k_0$ is also called the \emph{root} checkpoint.
 
 \inputs
 \begin{itemize}
@@ -320,12 +326,15 @@ which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
             in the registry,
         \item $k'$ is a checkpoint which has the original project checkpoint
             $k_0$ in its ancestry.
-        \item $\field{P}{contract}(\tx{set-checkpoint}{\field{P}{id}, k'}) \equiv \top$
+        \item $\field{P}{contract}(\txmsg{set-checkpoint}{\field{P}{id}, k'}) \equiv \top$
     \end{itemize}
     \outputs
     \begin{itemize}
         \item $\field{P}{k} = k'$
     \end{itemize}}
+Note that the semantics of this transaction allows for projects to revert to
+a previous checkpoint, or to adopt a ``fork'', as long as the new checkpoint
+shares part of its ancestry with the previous checkpoint.
 
 \subsection{Updating the project contract}
 The act of updating a project's contract:
@@ -342,7 +351,7 @@ The act of updating a project's contract:
     \validation
     \begin{itemize}
         \item $P \in \projects$,
-        \item $\field{P}{contract}(\tx{set-contract}{\field{P}{id}, c}) \equiv \top$
+        \item $\field{P}{contract}(\txmsg{set-contract}{\field{P}{id}, c}) \equiv \top$
     \end{itemize}
     \outputs
     \begin{itemize}
