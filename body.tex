@@ -90,7 +90,7 @@ A project $P$ is a tuple:
             invoked as a function which takes a transaction $t$ as input, and
             returns an output in $\{\top, \bot\}$, or:
             \[
-                \field{P}{contract}(t) \to \{\top, \bot\}.
+                \field{P}{contract}(t) \to \{\top, \bot, \nat\}.
             \]
             An output of $\top$ signifies \emph{authorized}, while $\bot$ is for
             \emph{unauthorized}.
@@ -407,3 +407,61 @@ longer used, the following transaction will `forget' the association:
 \[
     \tx{forget}{\field{I}{pk}}
 \]
+
+\appendix
+\section*{Appendix}
+
+\subsection*{Alternative contribution model}
+It's possible to drastically reduce the size of checkpoints by merkleizing the commit
+history and making contribution claiming an explicit action on the part of
+the contributor.
+
+First, we change the checkpoint transaction's $\field{K}{contribs}$ argument from a \emph{list}
+of commits to a single \emph{hash}. This hash is the Merkle root of the commit list
+that was $\field{K}{contribs}$, with $\tuple{\field{C}{hash}, \field{C}{author}, \field{C}{sig}}$ at each leaf:
+% TODO: Is `C_{author}` actually required?
+\[
+    \field{K}{contribs} = \operatorname{\mathsf{hash}}(
+        [\tuple{\field{C}{hash}, \field{C}{author}, \field{C}{sig}}]
+    ),
+\]
+where \textsf{hash} is a \emph{Merkle} hash function. $\field{K}{contribs}$ is
+now constant-sized. Note that in this alternative model, $\field{C}{parent}$ is
+no longer used, since it can't be verified.
+
+Then, we ask contributors to claim contributions if they wish to receive rewards, with
+a new \textsf{claim-contribution} transaction:
+\[
+    \tx{claim-contribution}{C_1 \dots C_n, \field{C}{proof}}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $C_1 \dots C_n$ is the list of commits to claim, where $C =
+            \tuple{\field{C}{hash}, \field{C}{sig}}$, and $\field{C}{author} =
+            \alpha$, the author of the transaction. Note that $\field{C}{author}$
+            is not actually included in the transaction, since it is assumed to always
+            be $\alpha$.
+        \item $\field{C}{proof}$ is the Merkle proof asserting that $C_1 \dots C_n$
+            are included in the $\field{K}{contribs}$ set. It is expected that
+            $\field{C}{proof}$ can use structural sharing to compress the Merkle paths
+            such that the transaction does not grow linearly in $n$. Formally, each
+            $\field{C}{proof}$ is an ordered set $\{\pi_1 \dots \pi_n\}$ of Merkle
+            paths associated with $C_1 \dots C_n$.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{C}{proof}$ is valid if each path $\pi$ hashes to the same root
+            hash $r$, and there is a checkpoint $K$ such that $\field{K}{contribs} = r$.
+        \item For each $C \in C_1 \dots C_n$, $\field{C}{sig}$ is a signature by the
+            author $\alpha$.
+        % TODO: Explain how the proof is constructed?
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\alpha_{bal'} = \alpha_{bal} + v$, where $\alpha_{bal'}$ is the
+            author's new account balance, and $v = \field{P}{contract}(t)$ where
+            $t$ is the \textsf{claim-contribution} transaction.
+    \end{itemize}
+}
