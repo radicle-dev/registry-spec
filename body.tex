@@ -191,6 +191,29 @@ or
     \item $P \notin \pending$
 \end{itemize}
 
+\subsection{Project registration withdrawal}
+It's possible to withdraw a project from registration if it hasn't been
+accepted or rejected yet with:
+\[
+    \tx{withdraw-project}{\field{t}{hash}}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{t}{hash}$ is the transaction hash of the \textsf{register-project}
+            transaction $t$ for some project $P$ that should be withdrawn.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \pending$
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $P \notin \pending$
+    \end{itemize}
+}
+
 \subsection{Checkpointing}
 \label{s:checkpoint}
 The act of notarizing a project's state and updating the network graph:
