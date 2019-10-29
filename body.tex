@@ -108,7 +108,8 @@ of all projects is $\projects$.
 \subsection{Project registration}
 The act of registering a project under a unique name and domain:
 \[
-    \tx{register-project}{\field{P}{id}, \field{P}{k}, \field{P}{proof}, \field{P}{meta}}
+    \tx{register-project}{\field{P}{id}, \field{P}{k}, \field{P}{contract},
+        \field{P}{proof}, \field{P}{meta}}
 \]
 This transaction requires a deposit $\deposit{register-project}$.
 
@@ -122,7 +123,14 @@ This transaction requires a deposit $\deposit{register-project}$.
         $\field{P}{id}$,
     \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
         with this project, formally $k_0$. This checkpoint must always remain
-        in the project ancestry.
+        in the project ancestry,
+    \item $\field{P}{contract}$ is the initial project contract that includes
+        the initial permission set around the project,
+    \item $\field{P}{proof}$ is a byte array of up to 4096 bytes supplied to
+        prove the legitimacy of this project registration,
+    \item $\field{P}{meta}$ is a dictionary of metadata to be associated with
+        $P$. For example, identities on other platforms. Note that once submitted,
+        the metadata is immutable.
 \end{itemize}
 \validation
 \begin{itemize}
@@ -201,8 +209,8 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
 \inputs
 \begin{itemize}
     \item $\field{K}{parent}$ is the \emph{id} of the previous or `parent' checkpoint,
-    \item $\field{K}{hash}$ is the new \emph{hash} of the project state,
-    \item $\field{K}{version}$ is the new \emph{version} of the project,
+    \item $\field{K}{hash}$ is the new hash of the project state,
+    \item $\field{K}{version}$ is the current version of the project,
     \item $\field{K}{contribs}$ is the list of contributions since $\field{K}{parent}$,
     \item $\field{K}{deps}$ is the list of dependency updates since the $\field{K}{parent}$.
 \end{itemize}
@@ -213,7 +221,7 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
     \item{$\field{K}{hash}$ is a valid hash that hasn't been used in a parent
         checkpoint.}
     \item{$\field{K}{version}$ is a string between $1$ and $32$ bytes long that
-        hasn't been used in a previous project checkpoint.}
+        \emph{may} have been used in a previous project checkpoint.}
     \item{$\field{K}{contribs}$ is a valid contribution list (See \S
         \ref{s:checkpoint-contribs}).}
     \item{$\field{K}{deps}$ is a valid dependency update list (See \S
