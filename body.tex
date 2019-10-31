@@ -232,7 +232,8 @@ The act of notarizing a project's state and updating the network graph:
 \]
 Checkpoints within the scope of a single project form a chain going from the
 latest, or ``current'' checkpoint $k_{n-1}$ to the first and original
-checkpoint $k_0$.
+checkpoint $k_0$. Checkpoints are identified by their transaction hash,
+so $k \in \field{T}{hash}$.
 
 From the perspective of $k_0$, we can talk of a checkpoint \emph{tree}, since
 due to their nature, they are able to represent branching. Hence, the original
