@@ -7,7 +7,9 @@ arg_n}$, where $arg_1, \ldots arg_n$ are the \emph{inputs} and $\sigma$ is the
 have an \emph{author} and an \emph{origin} (formally $\alpha$), which is the
 author's account.
 
-Transactions can be uniquely identified by their \emph{hash}.
+Transactions can be uniquely identified by their \emph{hash}. The set of all
+\emph{known} transactions is $\txs$ (the ``ledger''), and the set of all known
+transaction hashes is $\field{\txs}{hash}$.
 
 \section{Accounts}
 An account $A$ is a tuple:
@@ -89,19 +91,27 @@ A project $P$ is a tuple:
             permissions around the project, as well as its fund. It can be
             described as a function:
             \[
-                f : T \to \{\top, \bot\} \cup [\distribution] \cup \nat.
+                f : \txs \to \mathcal{O}
             \]
-            where $T$ is any verified transaction.  An output of $\top$
-            signifies a transaction $t \in T$ is \emph{authorized}, while
-            $\bot$ means \emph{unauthorized}.
+            where $\txs$ is any known transaction, and $\mathcal{O}$ is the
+            function's codomain described by:
+            \[
+                \{\top, \bot\} \cup [\distribution] \cup \nat.
+            \]
+            An output in $\{\top, \bot\}$ is reserved for \emph{boolean} contracts,
+            where $\top$ signifies a transaction $t \in \txs$ is
+            \emph{authorized} to execute by the contract, and $\bot$ means it
+            is \emph{unauthorized}.  Note that a transaction can be verified
+            and included in the transaction ledger $\txs$ yet still be
+            unauthorized to run.
 
-            An output of type $[\distribution]$ is reserved for transactions
+            An output in $[\distribution]$ is reserved for transactions
             that should trigger a distribution of funds to one or more
             contract-specified beneficiaries, where $\field{A}{id}$ is the
             account of one of the beneficiaries, and $\nat$ is the value to
             transfer.
 
-            An output of type $\nat$ is reserved for transactions that should
+            An output in $\nat$ is reserved for transactions that should
             trigger a transfer of funds to an a priori \emph{known} beneficiary
             that shouldn't be determined by the contract. For example, the transaction
             origin.
