@@ -89,13 +89,22 @@ A project $P$ is a tuple:
             permissions around the project, as well as its fund. It can be
             described as a function:
             \[
-                f : T \to \{\top, \bot\} \cup \nat.
+                f : T \to \{\top, \bot\} \cup [\distribution] \cup \nat.
             \]
             where $T$ is any verified transaction.  An output of $\top$
             signifies a transaction $t \in T$ is \emph{authorized}, while
-            $\bot$ means \emph{unauthorized}. An output of type $\nat$ is
-            reserved for transactions that should trigger a transfer of
-            funds. In that case $\nat$ is the set of valid values to transfer.
+            $\bot$ means \emph{unauthorized}.
+
+            An output of type $[\distribution]$ is reserved for transactions
+            that should trigger a distribution of funds to one or more
+            contract-specified beneficiaries, where $\field{A}{id}$ is the
+            account of one of the beneficiaries, and $\nat$ is the value to
+            transfer.
+
+            An output of type $\nat$ is reserved for transactions that should
+            trigger a transfer of funds to an a priori \emph{known} beneficiary
+            that shouldn't be determined by the contract. For example, the transaction
+            origin.
         \item $\field{P}{proof}$ is the proof that was supplied during registration,
             verifying the owner's authority over the project,
         \item $\field{P}{meta}$ is a dictionary of additional metadata to associate
