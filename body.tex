@@ -392,7 +392,47 @@ Note that the semantics of this transaction allows for projects to revert to
 a previous checkpoint, or to adopt a ``fork'', as long as the new checkpoint
 shares part of its ancestry with the previous checkpoint.
 
-\subsection{Updating the project contract}
+\subsection{The project fund}
+\label{s:fund}
+Each project has an associated account $\field{P}{account}$ called the
+\emph{fund}. To use that account to fund maintenance or other projects,
+the \textsf{fund} transaction is used:
+\[
+    \tx{fund}{\field{P}{id}, \field{A}{id}, v}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{P}{id}$ is the id of the project that should initiate
+            the value transfer.
+        \item $\field{A}{id}$ is the id of the account that should receive
+            the value.
+        \item $v$ is the value being transfered.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{p}{bal} \geq v$, where $p = \field{P}{account}$,
+        % TODO: Update this if we have deposits.
+        \item $\field{P}{contract}(\txmsg{fund}{\field{P}{id}, \field{A}{id}, v}) \equiv \top$.
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\field{A}{bal'} = \field{A}{bal} + v$
+    \end{itemize}}
+
+\subsection{The project contract}
+Every project $P$ in the registry has a contract denoted $\field{P}{contract}$.
+The way this contract is invoked is through transactions that act on $P$. For
+example, the \textsf{fund} transaction (\S\ref{s:fund}) which transfers value
+out of a project is always validated by the project contract before it
+is authorized to execute.
+
+A contract is made of a set of \emph{rules} that each handle a specific action
+relating to the project. In the \textsf{fund} example, the \textsf{fund}
+\emph{rule} would be invoked to determine the outcome of the transaction.
+
+\subsubsection{Updating the project contract}
 The act of updating a project's contract:
 \[
     \tx{set-contract}{\field{P}{id}, c}
