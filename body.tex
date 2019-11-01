@@ -539,12 +539,14 @@ no longer used, since it can't be verified.
 Then, we ask contributors to claim contributions if they wish to receive rewards, with
 a new \textsf{claim-contribution} transaction:
 \[
-    \tx{claim-contribution}{C_1 \dots C_n, \field{C}{proof}}
+    \tx{claim-contribution}{\field{P}{id}, C_1 \dots C_n, \field{C}{proof}}
 \]
 
 \spec{
     \inputs
     \begin{itemize}
+        \item $\field{P}{id}$ is the id of the project $P$ to claim the
+            contributions on.
         \item $C_1 \dots C_n$ is the list of commits to claim, where $C =
             \tuple{\field{C}{hash}, \field{C}{sig}}$, and $\field{C}{author} =
             \alpha$, the author of the transaction. Note that $\field{C}{author}$
@@ -559,10 +561,14 @@ a new \textsf{claim-contribution} transaction:
     \end{itemize}
     \validation
     \begin{itemize}
-        \item $\field{C}{proof}$ is valid if each path $\pi$ hashes to the same root
-            hash $r$, and there is a checkpoint $K$ such that $\field{K}{contribs} = r$.
+        \item $\field{C}{proof}$ is valid if each path $\pi$ hashes to the same
+            root hash $r$, and there is a checkpoint $K$ in $\field{P}{k}$'s
+            ancestry such that $\field{K}{contribs} = r$.
         \item For each $C \in C_1 \dots C_n$, $\field{C}{sig}$ is a signature by the
             author $\alpha$.
+        \item $C_1 \dots C_n$ have never been claimed before on $P$. Note that if
+            two projects have a shared ancestry, it's possible to claim
+            contributions once for \emph{each} project.
         % TODO: Explain how the proof is constructed?
     \end{itemize}
     \outputs
