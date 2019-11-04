@@ -157,7 +157,8 @@ This transaction requires a deposit $\deposit{propose-project}$.
 \begin{itemize}
     \item $\field{P}{name}$ must be unique, \ie not currently registered under
         $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
-        \textsf{UTF-8},
+        \textsf{UTF-8}---note that it is perfectly valid for multiple proposals
+        to co-exist with the same $\field{P}{id}$.
     \item $\field{P}{domain}$ must be an existing domain,
     \item $\field{P}{proof}$'s size is $\leq 4096$ bytes,
     \item $\field{P}{k}$ must represent an existing checkpoint,
