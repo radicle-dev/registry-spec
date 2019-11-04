@@ -146,8 +146,8 @@ This transaction requires a deposit $\deposit{register-project}$.
     \item $\field{P}{contract}$ is the initial project contract that includes
         the initial permission set around the project,
     \item $\field{P}{proof}$ is a byte array of up to 4096 bytes supplied to
-        prove the legitimacy of this project registration -- it is verified
-        \emph{off-registry},
+        prove the legitimacy of this project registration---it is verified
+        \emph{off-registry} during project approval (See \S\ref{s:accepting-projects}),
     \item $\field{P}{meta}$ is a dictionary of metadata to be associated with
         $P$. For example, identities on other platforms. Note that once submitted,
         the metadata is immutable.
