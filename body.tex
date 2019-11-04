@@ -146,7 +146,8 @@ This transaction requires a deposit $\deposit{register-project}$.
     \item $\field{P}{contract}$ is the initial project contract that includes
         the initial permission set around the project,
     \item $\field{P}{proof}$ is a byte array of up to 4096 bytes supplied to
-        prove the legitimacy of this project registration,
+        prove the legitimacy of this project registration -- it is verified
+        \emph{off-registry},
     \item $\field{P}{meta}$ is a dictionary of metadata to be associated with
         $P$. For example, identities on other platforms. Note that once submitted,
         the metadata is immutable.
@@ -157,6 +158,7 @@ This transaction requires a deposit $\deposit{register-project}$.
         $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
         \textsf{UTF-8},
     \item $\field{P}{domain}$ must be an existing domain,
+    \item $\field{P}{proof}$'s size is $\leq 4096$ bytes,
     \item $\field{P}{k}$ must represent an existing checkpoint,
     \item $\alpha_{bal} \geq \deposit{register-project}$.
 \end{itemize}
