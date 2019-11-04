@@ -214,8 +214,9 @@ or
 It's possible to withdraw a project from registration if it hasn't been
 accepted or rejected yet with:
 \[
-    \tx{withdraw-project}{\field{t}{hash}}
+    \tx{withdraw-project}{\field{t}{hash}}.
 \]
+This in turn returns the deposit made on \textsf{register-project}.
 
 \spec{
     \inputs
@@ -230,6 +231,7 @@ accepted or rejected yet with:
     \outputs
     \begin{itemize}
         \item $P \notin \pending$
+        \item $\alpha_{bal'} = \alpha_{bal} + \deposit{register-project}$.
     \end{itemize}
 }
 
