@@ -460,6 +460,66 @@ The act of updating a project's contract:
         \item $\field{P}{contract} = c$
     \end{itemize}}
 
+\subsection{Project Tokens}
+Projects are able to issue non-fungible tokens (NFTs) that can be used to
+access certain services or features around the project, such as support,
+licenses, issue and feature prioritization, or access to premium content.
+
+With NFTs, the registry functions as a decentralized ``licensing server'',
+which grants a token holder access to certain services. Acquiring NFTs
+is done by transfer from another holder, or purchase directly from the
+project.
+
+A token is formally represented as:
+\[
+    \theta = \tuple{\field{\theta}{id}, \field{\theta}{proj}, \field{\theta}{tag},
+                    \field{\theta}{price}}
+\]
+where $\field{\theta}{id}$ uniquely identifies a token unit. The set of
+all tokens is $\Theta$.
+
+\subsubsection{Token issuance}
+\[
+    \tx{issue-tokens}{\field{\theta}{proj}, \field{\theta}{tag}, \field{\theta}{price}, n}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{\theta}{proj}$ is the id of the project $P$ issuing the token,
+        \item $\field{\theta}{tag}$ is a project-scoped tag to be associated with the issued tokens,
+        \item $\field{\theta}{price}$ is the price for one token, in the native currency,
+        \item $n$ is the number of tokens to issue with that tag and price.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \projects$,
+        \item $\field{\theta}{tag} \in \bin_{32}$,
+        \item $\field{\theta}{price} \in \nat_{\geq 0}$,
+        \item $n \geq 1$,
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\Theta' = \Theta \cup \theta_{0} \ldots \theta_{n}$
+    \end{itemize}}
+Note that $\field{\theta}{tag}$ can be re-used to re-issue tokens with the same tag (but a potentially different price) multiple times. The tag is an arbitrary value meant to represent
+the type of NFT being purchased.
+
+\subsubsection{Token revocation}
+\[
+    \tx{revoke-tokens}{\field{\theta}{id_0} \ldots \field{\theta}{id_n}}
+\]
+
+\subsubsection{Token purchase}
+\[
+    \tx{purchase-token}{\field{\theta}{id}}
+\]
+
+\subsubsection{Token transfer}
+\[
+    \tx{transfer-token}{\field{\theta}{id}, \field{A}{id}}
+\]
+
 \section{Names}
 
 \subsection{Registering a domain}
