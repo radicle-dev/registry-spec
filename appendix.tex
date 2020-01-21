@@ -1,0 +1,300 @@
+\newpage
+\appendix
+
+% Don't show appendix in TOC.
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+
+\section{Alternative contribution model}
+It's possible to drastically reduce the size of checkpoints by merkleizing the commit
+history and making contribution claiming an explicit action on the part of
+the contributor.
+
+First, we change the checkpoint transaction's $\field{K}{contribs}$ argument from a \emph{list}
+of commits to a single \emph{hash}. This hash is the Merkle root of the commit list
+that was $\field{K}{contribs}$, with $\tuple{\field{C}{hash}, \field{C}{author}, \field{C}{sig}}$ at each leaf:
+% TODO: Is `C_{author}` actually required?
+\[
+    \field{K}{contribs} = \operatorname{\mathsf{hash}}(
+        [\tuple{\field{C}{hash}, \field{C}{author}, \field{C}{sig}}]
+    ),
+\]
+where \textsf{hash} is a Merkle hash function. $\field{K}{contribs}$ is
+now constant-sized. Note that in this alternative model, $\field{C}{parent}$ is
+no longer used, since it can't be verified.
+
+Then, we ask contributors to claim contributions if they wish to receive rewards, with
+a new \textsf{claim-contribution} transaction:
+\[
+    \tx{claim-contribution}{\field{P}{id}, C_1 \dots C_n, \field{C}{proof}}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{P}{id}$ is the id of the project $P$ to claim the
+            contributions on.
+        \item $C_1 \dots C_n$ is the list of commits to claim, where $C =
+            \tuple{\field{C}{hash}, \field{C}{sig}}$, and $\field{C}{author} =
+            \alpha$, the author of the transaction. Note that $\field{C}{author}$
+            is not actually included in the transaction, since it is assumed to always
+            be $\alpha$.
+        \item $\field{C}{proof}$ is the Merkle proof asserting that $C_1 \dots C_n$
+            are included in the $\field{K}{contribs}$ set. It is expected that
+            $\field{C}{proof}$ can use structural sharing to compress the Merkle paths
+            such that the transaction does not grow linearly in $n$. Formally, each
+            $\field{C}{proof}$ is an ordered set $\{\pi_1 \dots \pi_n\}$ of Merkle
+            paths associated with $C_1 \dots C_n$.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{C}{proof}$ is valid if each path $\pi$ hashes to the same
+            root hash $r$, and there is a checkpoint $K$ in $\field{P}{k}$'s
+            ancestry such that $\field{K}{contribs} = r$.
+        \item For each $C \in C_1 \dots C_n$, $\field{C}{sig}$ is a signature by the
+            author $\alpha$.
+        \item $C_1 \dots C_n$ have never been claimed before on $P$. Note that if
+            two projects have a shared ancestry, it's possible to claim
+            contributions once for \emph{each} project.
+        % TODO: Explain how the proof is constructed?
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\alpha_{bal'} = \alpha_{bal} + v$, where $\alpha_{bal'}$ is the
+            author's new account balance, and $v = \field{P}{contract}(t)$ where
+            $t$ is the \textsf{claim-contribution} transaction.
+    \end{itemize}
+}
+
+\section{Projects}
+
+\subsection{Project proposal}
+The act of proposing a project for registration under a unique name and domain:
+\[
+    \tx{propose-project}{\field{P}{id}, \field{P}{k}, \field{P}{contract},
+        \field{P}{proof}, \field{P}{meta}}
+\]
+This transaction requires a deposit $\deposit{propose-project}$.
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{P}{id} = \tuple{\field{P}{name}, \field{P}{org}}$
+    \item $\field{P}{name}$ is the unique name being requested, where
+    \item $\field{P}{domain}$ is the domain under which $\field{P}{name}$ is
+        being registered, which together form the unique identifier
+        $\field{P}{id}$,
+    \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
+        with this project, formally $k_0$. This checkpoint must always remain
+        in the project ancestry,
+    \item $\field{P}{contract}$ is the initial project contract that includes
+        the initial permission set around the project,
+    \item $\field{P}{proof}$ is a byte array of up to 4096 bytes supplied to
+        prove the legitimacy of this project proposal---it is verified
+        \emph{off-registry} during project approval (See \S\ref{s:accepting-projects}),
+    \item $\field{P}{meta}$ is a dictionary of metadata to be associated with
+        $P$. For example, identities on other platforms. Note that once submitted,
+        the metadata is immutable.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{P}{name}$ must be unique, \ie not currently registered under
+        $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
+        \textsf{UTF-8}---note that it is perfectly valid for multiple proposals
+        to co-exist with the same $\field{P}{id}$.
+    \item $\field{P}{domain}$ must be an existing domain,
+    \item $\field{P}{proof}$'s size is $\leq 4096$ bytes,
+    \item $\field{P}{k}$ must represent an existing checkpoint,
+    \item $\alpha_{bal} \geq \deposit{propose-project}$.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $P \in \pending$, where $\pending$ is the set of proposals that
+        are in a ``pending'' state, waiting to be accepted or rejected (See
+        \S\ref{s:accepting-projects}). Note that $\pending$ and $\projects$
+        are disjoint,
+    \item $\alpha_{bal'} = \alpha_{bal} - \deposit{propose-project}$.
+\end{itemize}}
+
+\subsection{Accepting and rejecting a project}
+\label{s:accepting-projects}
+The act of accepting or rejecting a project being registered:
+\[
+    \tx{accept-project}{\field{t}{hash}}
+\]
+or
+\[
+    \tx{reject-project}{\field{t}{hash}}
+\]
+
+\inputs
+\begin{itemize}
+    \item $\field{t}{hash}$ is the \emph{transaction hash} of the
+        \textsf{propose-project} transaction $t$ of a project $P$
+        being accepted or rejected.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item The transaction \emph{origin} is a member of $\root$,
+    \item $\field{t}{hash}$ must be the hash of an existing transaction of
+        type \textsf{propose-project}. In other words, $P \in \pending$,
+        where $P$ is the project being registered.
+\end{itemize}
+
+\bigskip
+\noindent For \textsf{accept-project},
+\newline\outputs
+\begin{itemize}
+    \item $P \in \projects$
+    \item $P \notin \pending$
+    \item $\field{P}{account} = \tuple{\field{A}{id}, 0, 0}$
+\end{itemize}
+\bigskip
+\noindent For \textsf{reject-project},
+\newline\outputs
+\begin{itemize}
+    \item $P \notin \projects$
+    \item $P \notin \pending$
+\end{itemize}
+
+\subsection{Project proposal withdrawal}
+It's possible to withdraw a project from proposal if it hasn't been
+accepted or rejected yet with:
+\[
+    \tx{withdraw-project}{\field{t}{hash}}.
+\]
+This in turn returns the deposit made on \textsf{propose-project}.
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{t}{hash}$ is the transaction hash of the \textsf{propose-project}
+            transaction $t$ for some project $P$ that should be withdrawn.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \pending$
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $P \notin \pending$
+        \item $\alpha_{bal'} = \alpha_{bal} + \deposit{propose-project}$.
+    \end{itemize}
+}
+
+\subsection{Project Tokens}
+Projects are able to issue non-fungible tokens (NFTs) that can be used to
+access certain services or features around the project, such as support,
+licenses, issue and feature prioritization, or access to premium content.
+
+With NFTs, the registry functions as a decentralized ``licensing server'',
+which grants a token holder access to certain services. Acquiring NFTs
+is done by transfer from another holder, or purchase directly from the
+project.
+
+A token is formally represented as:
+\[
+    \theta = \tuple{\field{\theta}{id}, \field{\theta}{proj}, \field{\theta}{tag},
+                    \field{\theta}{price}}
+\]
+where $\field{\theta}{id}$ uniquely identifies a token unit. The set of
+all tokens is $\Theta$.
+
+\subsection{Token issuance}
+\[
+    \tx{issue-tokens}{\field{\theta}{proj}, \field{\theta}{tag}, \field{\theta}{price}, n}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{\theta}{proj}$ is the id of the project $P$ issuing the token,
+        \item $\field{\theta}{tag}$ is a project-scoped tag to be associated with the issued tokens,
+        \item $\field{\theta}{price}$ is the price for one token, in the native currency,
+        \item $n$ is the number of tokens to issue with that tag and price.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \projects$,
+        \item $\field{\theta}{tag} \in \bin_{32}$,
+        \item $\field{\theta}{price} \in \nat_{\geq 0}$,
+        \item $n \geq 1$,
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\Theta' = \Theta \cup \theta_{0} \ldots \theta_{n}$
+    \end{itemize}}
+Note that $\field{\theta}{tag}$ can be re-used to re-issue tokens with the same tag (but a potentially different price) multiple times. The tag is an arbitrary value meant to represent
+the type of NFT being purchased.
+
+\subsection{Token revocation}
+\[
+    \tx{revoke-tokens}{\field{\theta}{id_0} \ldots \field{\theta}{id_n}}
+\]
+
+\subsection{Token purchase}
+\[
+    \tx{purchase-token}{\field{\theta}{id}}
+\]
+
+\subsection{Token transfer}
+\[
+    \tx{transfer-token}{\field{\theta}{id}, \field{A}{id}}
+\]
+
+\section{Root accounts}
+Some accounts are considered \emph{privileged}. These `root' accounts,
+formally $\root \subset \accounts$ are authorized to conduct certain transactions
+that are only valid when originating from these accounts.
+
+The set of accounts in $\root$ is defined at \emph{genesis}, and may not be
+further modified in the initial protocol.
+
+\section{Names}
+
+\subsection{Registering a domain}
+The act of registering a top-level domain:
+\[
+    \tx{register-domain}{domain}
+\]
+\inputs
+\begin{itemize}
+    \item $domain$ is the unique domain being registered.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item The transaction origin $\alpha$ is a member of $\root$,
+    \item $domain$ must be available for registration, between $1$ and $32$
+        characters long, and valid \textsf{UTF-8}.
+\end{itemize}
+For example,
+\[
+    \tx{register-domain}{\mathtt{crates}}
+\]
+
+\subsection{Distribution contracts}
+A distribution contract can be described as a function:
+\[
+    f : \txs \to \mathcal{O}
+\]
+where $\txs$ is any known transaction, and $\mathcal{O}$ is the
+function's codomain described by:
+\[
+    \{\top, \bot\} \cup [\distribution] \cup \nat.
+\]
+An output in $\{\top, \bot\}$ is reserved for \emph{boolean} contracts,
+where $\top$ signifies a transaction $t \in \txs$ is
+\emph{authorized} to execute by the contract, and $\bot$ means it
+is \emph{unauthorized}.  Note that a transaction can be verified
+and included in the transaction ledger $\txs$ yet still be
+unauthorized to run.
+
+An output in $[\distribution]$ is reserved for transactions
+that should trigger a distribution of funds to one or more
+contract-specified beneficiaries, where $\field{A}{id}$ is the
+account of one of the beneficiaries, and $\nat$ is the value to
+transfer.
+
+An output in $\nat$ is reserved for transactions that should
+trigger a transfer of funds to an a priori \emph{known} beneficiary
+that shouldn't be determined by the contract. For example, the transaction
+origin.
