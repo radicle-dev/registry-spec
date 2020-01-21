@@ -536,9 +536,11 @@ longer used, the following transaction will `forget' the association:
 
 \newpage
 \appendix
-\section*{Appendix A.}
 
-\subsection*{Alternative contribution model}
+% Don't show appendix in TOC.
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+
+\section{Alternative contribution model}
 It's possible to drastically reduce the size of checkpoints by merkleizing the commit
 history and making contribution claiming an explicit action on the part of
 the contributor.
