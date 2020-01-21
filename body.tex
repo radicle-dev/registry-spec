@@ -601,7 +601,9 @@ a new \textsf{claim-contribution} transaction:
     \end{itemize}
 }
 
-\subsection*{Project proposal}
+\section{Projects}
+
+\subsection{Project proposal}
 The act of proposing a project for registration under a unique name and domain:
 \[
     \tx{propose-project}{\field{P}{id}, \field{P}{k}, \field{P}{contract},
@@ -649,7 +651,7 @@ This transaction requires a deposit $\deposit{propose-project}$.
     \item $\alpha_{bal'} = \alpha_{bal} - \deposit{propose-project}$.
 \end{itemize}}
 
-\subsection*{Accepting and rejecting a project}
+\subsection{Accepting and rejecting a project}
 \label{s:accepting-projects}
 The act of accepting or rejecting a project being registered:
 \[
@@ -690,7 +692,7 @@ or
     \item $P \notin \pending$
 \end{itemize}
 
-\subsection*{Project proposal withdrawal}
+\subsection{Project proposal withdrawal}
 It's possible to withdraw a project from proposal if it hasn't been
 accepted or rejected yet with:
 \[
@@ -715,7 +717,7 @@ This in turn returns the deposit made on \textsf{propose-project}.
     \end{itemize}
 }
 
-\subsection*{Project Tokens}
+\subsection{Project Tokens}
 Projects are able to issue non-fungible tokens (NFTs) that can be used to
 access certain services or features around the project, such as support,
 licenses, issue and feature prioritization, or access to premium content.
@@ -733,7 +735,7 @@ A token is formally represented as:
 where $\field{\theta}{id}$ uniquely identifies a token unit. The set of
 all tokens is $\Theta$.
 
-\subsection*{Token issuance}
+\subsection{Token issuance}
 \[
     \tx{issue-tokens}{\field{\theta}{proj}, \field{\theta}{tag}, \field{\theta}{price}, n}
 \]
@@ -760,24 +762,22 @@ all tokens is $\Theta$.
 Note that $\field{\theta}{tag}$ can be re-used to re-issue tokens with the same tag (but a potentially different price) multiple times. The tag is an arbitrary value meant to represent
 the type of NFT being purchased.
 
-\subsection*{Token revocation}
+\subsection{Token revocation}
 \[
     \tx{revoke-tokens}{\field{\theta}{id_0} \ldots \field{\theta}{id_n}}
 \]
 
-\subsection*{Token purchase}
+\subsection{Token purchase}
 \[
     \tx{purchase-token}{\field{\theta}{id}}
 \]
 
-\subsection*{Token transfer}
+\subsection{Token transfer}
 \[
     \tx{transfer-token}{\field{\theta}{id}, \field{A}{id}}
 \]
 
-\section*{Appendix B. Names}
-
-\subsection*{Root accounts}
+\section{Root accounts}
 Some accounts are considered \emph{privileged}. These `root' accounts,
 formally $\root \subset \accounts$ are authorized to conduct certain transactions
 that are only valid when originating from these accounts.
@@ -785,7 +785,9 @@ that are only valid when originating from these accounts.
 The set of accounts in $\root$ is defined at \emph{genesis}, and may not be
 further modified in the initial protocol.
 
-\subsection*{Registering a domain}
+\section{Names}
+
+\subsection{Registering a domain}
 The act of registering a top-level domain:
 \[
     \tx{register-domain}{domain}
@@ -805,7 +807,7 @@ For example,
     \tx{register-domain}{\mathtt{crates}}
 \]
 
-\subsection*{Distribution contracts}
+\subsection{Distribution contracts}
 A distribution contract can be described as a function:
 \[
     f : \txs \to \mathcal{O}
