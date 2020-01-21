@@ -39,20 +39,12 @@ Note that accounts can \emph{never be removed}, since that would violate the
 invariant that nonces are only ever incremented, and removing an account is
 equivalent to setting $\field{A}{nonce}$ and $\field{A}{bal}$ to $0$.
 
-\subsection{Root accounts}
-Some accounts are considered \emph{privileged}. These `root' accounts,
-formally $\root \subset \accounts$ are authorized to conduct certain transactions
-that are only valid when originating from these accounts.
-
-The set of accounts in $\root$ is defined at \emph{genesis}, and may not be
-further modified in the initial protocol.
-
 \subsection{Transferring value}
 The act of transferring coins between two accounts:
 \[
     \tx{transfer}{\field{A}{id}, v}
 \]
-which will transfer value from the transaction origin $\alpha$ to account $A$.
+which will transfer value from the transaction origin $\origin$ to account $A$.
 
 \spec{
     \inputs
@@ -73,175 +65,251 @@ which will transfer value from the transaction origin $\alpha$ to account $A$.
     \end{itemize}
 }
 
-\section{Projects}
-A project $P$ is a tuple:
+\section{Orgs}
+An org is a logical grouping of people and projects with common governance
+and funds. An org $O$ is a tuple:
 \[
-    P = \tuple{\field{P}{id}, \field{P}{k}, \field{P}{account},
-        \field{P}{contract}, \field{P}{proof}, \field{P}{meta}}
+    O = \tuple{\field{O}{id}, \field{O}{account},
+        \field{O}{members}, \field{O}{projs}, \field{O}{contract}}
 \]
 
 \spec{
     \definition
     \begin{itemize}
-        \item $\field{P}{id}$ is the unique project identifier, defined as
-            $\tuple{\field{P}{name}, \field{P}{domain}}$,
-        \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
-        \item $\field{P}{account}$ is the project account or \emph{fund},
-        \item $\field{P}{contract}$ is the project contract, which governs
-            permissions around the project, as well as its fund. It can be
+        \item $\field{O}{id}$ is the globally unique org identifier,
+        \item $\field{O}{account}$ is the org account or \emph{fund},
+        \item $\field{O}{members}$ is the set of registered org members,
+        \item $\field{O}{projs}$ is the set of registered projects under this org,
+        \item $\field{O}{contract}$ is the org contract, which governs
+            permissions around the org, as well as its fund. It can be
             described as a function:
             \[
-                f : \txs \to \mathcal{O}
+                f : \txs \to \{\top, \bot\}
             \]
-            where $\txs$ is any known transaction, and $\mathcal{O}$ is the
-            function's codomain described by:
-            \[
-                \{\top, \bot\} \cup [\distribution] \cup \nat.
-            \]
-            An output in $\{\top, \bot\}$ is reserved for \emph{boolean} contracts,
-            where $\top$ signifies a transaction $t \in \txs$ is
-            \emph{authorized} to execute by the contract, and $\bot$ means it
-            is \emph{unauthorized}.  Note that a transaction can be verified
-            and included in the transaction ledger $\txs$ yet still be
-            unauthorized to run.
-
-            An output in $[\distribution]$ is reserved for transactions
-            that should trigger a distribution of funds to one or more
-            contract-specified beneficiaries, where $\field{A}{id}$ is the
-            account of one of the beneficiaries, and $\nat$ is the value to
-            transfer.
-
-            An output in $\nat$ is reserved for transactions that should
-            trigger a transfer of funds to an a priori \emph{known} beneficiary
-            that shouldn't be determined by the contract. For example, the transaction
-            origin.
-        \item $\field{P}{proof}$ is the proof that was supplied during proposal,
-            verifying the owner's authority over the project,
-        \item $\field{P}{meta}$ is a dictionary of additional metadata to associate
-            with the project, for example the \radicle{} \emph{project id}.
-            $\field{P}{meta}$ is \emph{immutable} once defined.
+            where $\txs$ is any transaction $t$ operating on an org, and $\top$
+            signifies $t$ is \emph{authorized} to execute by the contract, while
+            $\bot$ means it is \emph{unauthorized}.  Note that a transaction
+            can be verified and included in the transaction ledger $\txs$ yet
+            still be unauthorized to run by the contract
     \end{itemize}}
-Projects are proposed with the \textsf{propose-project} transaction and subsequently registered
-with the \textsf{accept-project} transaction.  The set of all registered projects is $\projects$.
-The set of all proposals is $\pending$.
 
-\subsection{Project proposal}
-The act of proposing a project for registration under a unique name and domain:
+\subsection{Registering orgs}
 \[
-    \tx{propose-project}{\field{P}{id}, \field{P}{k}, \field{P}{contract},
-        \field{P}{proof}, \field{P}{meta}}
+    \tx{register-org}{\field{O}{id}, \field{O}{contract}}
 \]
-This transaction requires a deposit $\deposit{propose-project}$.
 
 \spec{
 \inputs
 \begin{itemize}
-    \item $\field{P}{id} = \tuple{\field{P}{name}, \field{P}{domain}}$
-    \item $\field{P}{name}$ is the unique name being requested, where
-    \item $\field{P}{domain}$ is the domain under which $\field{P}{name}$ is
-        being registered, which together form the unique identifier
-        $\field{P}{id}$,
-    \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
-        with this project, formally $k_0$. This checkpoint must always remain
-        in the project ancestry,
-    \item $\field{P}{contract}$ is the initial project contract that includes
-        the initial permission set around the project,
-    \item $\field{P}{proof}$ is a byte array of up to 4096 bytes supplied to
-        prove the legitimacy of this project proposal---it is verified
-        \emph{off-registry} during project approval (See \S\ref{s:accepting-projects}),
-    \item $\field{P}{meta}$ is a dictionary of metadata to be associated with
-        $P$. For example, identities on other platforms. Note that once submitted,
-        the metadata is immutable.
+    \item $\field{O}{id}$ is the unique identifier being registered,
+    \item $\field{O}{contract}$ is the initial org contract that includes
+        the initial permission set around the org.
 \end{itemize}
 \validation
 \begin{itemize}
-    \item $\field{P}{name}$ must be unique, \ie not currently registered under
-        $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
-        \textsf{UTF-8}---note that it is perfectly valid for multiple proposals
-        to co-exist with the same $\field{P}{id}$.
-    \item $\field{P}{domain}$ must be an existing domain,
-    \item $\field{P}{proof}$'s size is $\leq 4096$ bytes,
-    \item $\field{P}{k}$ must represent an existing checkpoint,
-    \item $\alpha_{bal} \geq \deposit{propose-project}$.
+    \item $\field{O}{id}$ must be unique, \ie not currently in use,
+        between $1$ and $32$ bytes long, and valid \textsf{UTF-8}.
+    \item $\field{\alpha}{bal} \geq \deposit{register-org}$.
 \end{itemize}
 \outputs
 \begin{itemize}
-    \item $P \in \pending$, where $\pending$ is the set of proposals that
-        are in a ``pending'' state, waiting to be accepted or rejected (See
-        \S\ref{s:accepting-projects}). Note that $\pending$ and $\projects$
-        are disjoint,
-    \item $\alpha_{bal'} = \alpha_{bal} - \deposit{propose-project}$.
+    \item $O \in \orgs$, where $O =
+        \tuple{\field{O}{id},
+            \field{O}{account},
+            \{\origin\},
+            \varnothing,
+            \field{O}{contract}}$
+    \item $\field{O}{account} \in \accounts$,
+    \item $\field{\alpha}{bal'} = \field{\alpha}{bal} - \deposit{register-org}$.
 \end{itemize}}
 
-\subsection{Accepting and rejecting a project}
-\label{s:accepting-projects}
-The act of accepting or rejecting a project being registered:
+\subsection{Unregistering orgs}
 \[
-    \tx{accept-project}{\field{t}{hash}}
-\]
-or
-\[
-    \tx{reject-project}{\field{t}{hash}}
+    \tx{unregister-org}{\field{O}{id}}
 \]
 
+\spec{
 \inputs
 \begin{itemize}
-    \item $\field{t}{hash}$ is the \emph{transaction hash} of the
-        \textsf{propose-project} transaction $t$ of a project $P$
-        being accepted or rejected.
+    \item $\field{O}{id}$ is the identifier of the org being unregistered,
 \end{itemize}
 \validation
 \begin{itemize}
-    \item The transaction \emph{origin} is a member of $\root$,
-    \item $\field{t}{hash}$ must be the hash of an existing transaction of
-        type \textsf{propose-project}. In other words, $P \in \pending$,
-        where $P$ is the project being registered.
+    \item $O \in \orgs$,
+    \item $\field{O}{members} = \{\origin\}$, the transaction origin must be the
+        only member,
+    \item $\field{O}{projs} = \varnothing$, there must be no projects under the
+        org,
 \end{itemize}
-
-\bigskip
-\noindent For \textsf{accept-project},
-\newline\outputs
+\outputs
 \begin{itemize}
-    \item $P \in \projects$
-    \item $P \notin \pending$
-    \item $\field{P}{account} = \tuple{\field{A}{id}, 0, 0}$
-\end{itemize}
-\bigskip
-\noindent For \textsf{reject-project},
-\newline\outputs
-\begin{itemize}
-    \item $P \notin \projects$
-    \item $P \notin \pending$
-\end{itemize}
+    \item $O \notin \orgs$,
+    \item $\field{\alpha}{bal'} = \field{\alpha}{bal} + \deposit{register-org} + \field{O}{account_{bal}}$.
+\end{itemize}}
 
-\subsection{Project proposal withdrawal}
-It's possible to withdraw a project from proposal if it hasn't been
-accepted or rejected yet with:
+\subsection{Registering org members}
 \[
-    \tx{withdraw-project}{\field{t}{hash}}.
+    \tx{register-member}{\field{O}{id}, \field{A}{id}}
 \]
-This in turn returns the deposit made on \textsf{propose-project}.
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{A}{id}$ is the account id being registered as a member,
+    \item $\field{O}{id}$ is the id of the org under which to register $A$,
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $O \in \orgs$,
+    \item $\field{A}{id}$ must not already be registered under $O$, or $\field{A}{id} \notin \field{O}{members}$
+    \item The transaction author is authorized to execute \txname{register-member},
+    \item $\alpha_{bal} \geq \deposit{register-member}$.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $\field{A}{id} \in \field{O}{members}$,
+    \item $\alpha_{bal'} = \alpha_{bal} - \deposit{register-member}$.
+\end{itemize}}
+
+\subsection{Unregistering org members}
+\[
+    \tx{unregister-member}{\field{O}{id}, \field{A}{id}}
+\]
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{O}{id}$ is the id of the org under which the member is registered,
+    \item $\field{A}{id}$ is the account id of the member being unregistered,
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $O \in \orgs$,
+    \item $\field{A}{id} \in \field{O}{members}$,
+    \item The transaction author is authorized to execute \txname{unregister-member}.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $\field{A}{id} \notin \field{O}{members}$,
+    \item $\alpha_{bal'} = \alpha_{bal} + \deposit{register-member}$.
+\end{itemize}}
+
+\subsection{The org contract}
+Every org $O$ in the registry has a contract denoted $\field{O}{contract}$.
+The way this contract is invoked is through transactions that act on $O$. For
+example, the \textsf{fund} transaction (\S\ref{s:fund}) which transfers value
+out of a org is always validated by the org contract before it
+is authorized to execute.
+
+A contract is made of a set of \emph{rules} that each handle a specific action
+relating to the org. In the \textsf{fund} example, the \textsf{fund}
+\emph{rule} would be invoked to determine the outcome of the transaction.
+
+\subsection{Updating the org contract}
+The act of updating a org's contract:
+\[
+    \tx{set-contract}{\field{O}{id}, c}
+\]
 
 \spec{
     \inputs
     \begin{itemize}
-        \item $\field{t}{hash}$ is the transaction hash of the \textsf{propose-project}
-            transaction $t$ for some project $P$ that should be withdrawn.
+        \item $\field{O}{id}$ is the id of the org,
+        \item $c$ is the new contract.
     \end{itemize}
     \validation
     \begin{itemize}
-        \item $P \in \pending$
+        \item $O \in \orgs$,
+        \item The transaction author is authorized to execute \txname{set-contract},
     \end{itemize}
     \outputs
     \begin{itemize}
-        \item $P \notin \pending$
-        \item $\alpha_{bal'} = \alpha_{bal} + \deposit{propose-project}$.
-    \end{itemize}
-}
+        \item $\field{O}{contract} = c$
+    \end{itemize}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Projects}
+A project $P$ is a tuple:
+\[
+    P = \tuple{\field{P}{id}, \field{P}{org}, \field{P}{k}, \field{P}{proof}, \field{P}{meta}}
+\]
+
+\spec{
+    \definition
+    \begin{itemize}
+        \item $\field{P}{id}$ is the unique project identifier within the context of an $\field{P}{org}$,
+        \item $\field{P}{org}$ is the org under which this project lives,
+        \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
+        \item $\field{P}{proof}$ is the proof that was supplied during proposal,
+            verifying the owner's authority over the project,
+        \item $\field{P}{meta}$ is opaque metadata to associate with $P$. For
+            example, the \radicle{} \emph{project id}. Note that once defined, the
+            metadata is immutable.
+    \end{itemize}}
+Projects are registered with the \textsf{register-project} transaction and unregistered
+with the \textsf{unregsiter-project} transaction. Projects always exist within the
+context of an org.
+
+\subsection{Registering}
+\[
+    \tx{register-project}{\field{P}{org}, \field{P}{id}, \field{P}{k}, \field{P}{meta}}
+\]
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{P}{id}$ is the unique project id being requested,
+    \item $\field{P}{org}$ is the id of the org under which to register $P$,
+    \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
+        with this project, formally $k_0$. This checkpoint must always remain
+        in the project ancestry,
+    \item $\field{P}{meta}$ is associated project metadata.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{P}{org}$ identifies an existing org $O$,
+    \item $\field{P}{id}$ is unique under $O$, between $1$ and $32$
+        bytes long, and valid \textsf{UTF-8}.
+    \item $\field{P}{k}$ represents an existing checkpoint,
+    \item $\field{P}{meta}$ is $\leq 128$ bytes long,
+    \item The transaction author is authorized to execute \txname{register-project},
+    \item $\alpha_{bal} \geq \deposit{register-project}$.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $P \in \field{O}{projs}$, where $\field{O}{id} = \field{P}{org}$,
+    \item $\alpha_{bal'} = \alpha_{bal} - \deposit{register-project}$.
+\end{itemize}}
+
+\subsection{Unregistering}
+\[
+    \tx{unregister-project}{\field{P}{org}, \field{P}{id}}
+\]
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{P}{id}$ is the project id being unregistered,
+    \item $\field{P}{org}$ is the id of the org under which $P$ lives,
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{P}{org}$ identifies an existing org $O$,
+    \item $P \in \field{O}{projs}$,
+    \item The transaction author is authorized to execute \txname{unregister-project}.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $P \notin \field{O}{projs}$,
+    % TODO: Does the deposit go back to the org account instead?
+    \item $\alpha_{bal'} = \alpha_{bal} + \deposit{register-project}$.
+\end{itemize}}
+
 
 \subsection{Checkpointing}
 \label{s:checkpoint}
-The act of notarizing a project's state and updating the network graph:
+The act of anchoring a project's state and updating the network graph:
 \[
     \tx{checkpoint}{\field{K}{parent}, \field{K}{hash}, \field{K}{version},
     \field{K}{contribs}, \field{K}{deps}}
@@ -277,7 +345,7 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
         \ref{s:checkpoint-deps}).}
 \end{itemize}
 
-\subsubsection{Contributions}
+\subsection{Contributions}
 \label{s:checkpoint-contribs}
 The list $\field{K}{contribs}$ supplied to the $\mathsf{checkpoint}$
 transaction is of the form:
@@ -320,7 +388,7 @@ ensures the project history is auditable and tamper-proof, while providing
 fundamental information to for the network graph $\netgraph$. Note that only
 contribution \emph{metadata} is stored on-chain.
 
-\subsubsection{Dependency updates}
+\subsection{Dependency updates}
 \label{s:checkpoint-deps}
 Conceptually, a project $P$ depends on another project $P'$ if it is an
 ``input'' to $P$ in some way: $P$ references $P'$ or parts of $P'$ in its
@@ -427,121 +495,6 @@ the \textsf{fund} transaction is used:
         \item $\field{A}{bal'} = \field{A}{bal} + v$
     \end{itemize}}
 
-\subsection{The project contract}
-Every project $P$ in the registry has a contract denoted $\field{P}{contract}$.
-The way this contract is invoked is through transactions that act on $P$. For
-example, the \textsf{fund} transaction (\S\ref{s:fund}) which transfers value
-out of a project is always validated by the project contract before it
-is authorized to execute.
-
-A contract is made of a set of \emph{rules} that each handle a specific action
-relating to the project. In the \textsf{fund} example, the \textsf{fund}
-\emph{rule} would be invoked to determine the outcome of the transaction.
-
-\subsubsection{Updating the project contract}
-The act of updating a project's contract:
-\[
-    \tx{set-contract}{\field{P}{id}, c}
-\]
-
-\spec{
-    \inputs
-    \begin{itemize}
-        \item $\field{P}{id}$ is the id of the project,
-        \item $c$ is the new contract.
-    \end{itemize}
-    \validation
-    \begin{itemize}
-        \item $P \in \projects$,
-        \item $\field{P}{contract}(\txmsg{set-contract}{\field{P}{id}, c}) \equiv \top$
-    \end{itemize}
-    \outputs
-    \begin{itemize}
-        \item $\field{P}{contract} = c$
-    \end{itemize}}
-
-\subsection{Project Tokens}
-Projects are able to issue non-fungible tokens (NFTs) that can be used to
-access certain services or features around the project, such as support,
-licenses, issue and feature prioritization, or access to premium content.
-
-With NFTs, the registry functions as a decentralized ``licensing server'',
-which grants a token holder access to certain services. Acquiring NFTs
-is done by transfer from another holder, or purchase directly from the
-project.
-
-A token is formally represented as:
-\[
-    \theta = \tuple{\field{\theta}{id}, \field{\theta}{proj}, \field{\theta}{tag},
-                    \field{\theta}{price}}
-\]
-where $\field{\theta}{id}$ uniquely identifies a token unit. The set of
-all tokens is $\Theta$.
-
-\subsubsection{Token issuance}
-\[
-    \tx{issue-tokens}{\field{\theta}{proj}, \field{\theta}{tag}, \field{\theta}{price}, n}
-\]
-
-\spec{
-    \inputs
-    \begin{itemize}
-        \item $\field{\theta}{proj}$ is the id of the project $P$ issuing the token,
-        \item $\field{\theta}{tag}$ is a project-scoped tag to be associated with the issued tokens,
-        \item $\field{\theta}{price}$ is the price for one token, in the native currency,
-        \item $n$ is the number of tokens to issue with that tag and price.
-    \end{itemize}
-    \validation
-    \begin{itemize}
-        \item $P \in \projects$,
-        \item $\field{\theta}{tag} \in \bin_{32}$,
-        \item $\field{\theta}{price} \in \nat_{\geq 0}$,
-        \item $n \geq 1$,
-    \end{itemize}
-    \outputs
-    \begin{itemize}
-        \item $\Theta' = \Theta \cup \theta_{0} \ldots \theta_{n}$
-    \end{itemize}}
-Note that $\field{\theta}{tag}$ can be re-used to re-issue tokens with the same tag (but a potentially different price) multiple times. The tag is an arbitrary value meant to represent
-the type of NFT being purchased.
-
-\subsubsection{Token revocation}
-\[
-    \tx{revoke-tokens}{\field{\theta}{id_0} \ldots \field{\theta}{id_n}}
-\]
-
-\subsubsection{Token purchase}
-\[
-    \tx{purchase-token}{\field{\theta}{id}}
-\]
-
-\subsubsection{Token transfer}
-\[
-    \tx{transfer-token}{\field{\theta}{id}, \field{A}{id}}
-\]
-
-\section{Names}
-
-\subsection{Registering a domain}
-The act of registering a top-level domain:
-\[
-    \tx{register-domain}{domain}
-\]
-\inputs
-\begin{itemize}
-    \item $domain$ is the unique domain being registered.
-\end{itemize}
-\validation
-\begin{itemize}
-    \item The transaction origin $\alpha$ is a member of $\root$,
-    \item $domain$ must be available for registration, between $1$ and $32$
-        characters long, and valid \textsf{UTF-8}.
-\end{itemize}
-For example,
-\[
-    \tx{register-domain}{\mathtt{crates}}
-\]
-
 \section{Identity}
 
 \subsection{Identifying as a contributor}
@@ -581,8 +534,9 @@ longer used, the following transaction will `forget' the association:
     \tx{forget}{\field{I}{pk}}
 \]
 
+\newpage
 \appendix
-\section*{Appendix}
+\section*{Appendix A.}
 
 \subsection*{Alternative contribution model}
 It's possible to drastically reduce the size of checkpoints by merkleizing the commit
@@ -644,3 +598,235 @@ a new \textsf{claim-contribution} transaction:
             $t$ is the \textsf{claim-contribution} transaction.
     \end{itemize}
 }
+
+\subsection*{Project proposal}
+The act of proposing a project for registration under a unique name and domain:
+\[
+    \tx{propose-project}{\field{P}{id}, \field{P}{k}, \field{P}{contract},
+        \field{P}{proof}, \field{P}{meta}}
+\]
+This transaction requires a deposit $\deposit{propose-project}$.
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{P}{id} = \tuple{\field{P}{name}, \field{P}{org}}$
+    \item $\field{P}{name}$ is the unique name being requested, where
+    \item $\field{P}{domain}$ is the domain under which $\field{P}{name}$ is
+        being registered, which together form the unique identifier
+        $\field{P}{id}$,
+    \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
+        with this project, formally $k_0$. This checkpoint must always remain
+        in the project ancestry,
+    \item $\field{P}{contract}$ is the initial project contract that includes
+        the initial permission set around the project,
+    \item $\field{P}{proof}$ is a byte array of up to 4096 bytes supplied to
+        prove the legitimacy of this project proposal---it is verified
+        \emph{off-registry} during project approval (See \S\ref{s:accepting-projects}),
+    \item $\field{P}{meta}$ is a dictionary of metadata to be associated with
+        $P$. For example, identities on other platforms. Note that once submitted,
+        the metadata is immutable.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{P}{name}$ must be unique, \ie not currently registered under
+        $\field{P}{domain}$, between $1$ and $32$ characters long, and valid
+        \textsf{UTF-8}---note that it is perfectly valid for multiple proposals
+        to co-exist with the same $\field{P}{id}$.
+    \item $\field{P}{domain}$ must be an existing domain,
+    \item $\field{P}{proof}$'s size is $\leq 4096$ bytes,
+    \item $\field{P}{k}$ must represent an existing checkpoint,
+    \item $\alpha_{bal} \geq \deposit{propose-project}$.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $P \in \pending$, where $\pending$ is the set of proposals that
+        are in a ``pending'' state, waiting to be accepted or rejected (See
+        \S\ref{s:accepting-projects}). Note that $\pending$ and $\projects$
+        are disjoint,
+    \item $\alpha_{bal'} = \alpha_{bal} - \deposit{propose-project}$.
+\end{itemize}}
+
+\subsection*{Accepting and rejecting a project}
+\label{s:accepting-projects}
+The act of accepting or rejecting a project being registered:
+\[
+    \tx{accept-project}{\field{t}{hash}}
+\]
+or
+\[
+    \tx{reject-project}{\field{t}{hash}}
+\]
+
+\inputs
+\begin{itemize}
+    \item $\field{t}{hash}$ is the \emph{transaction hash} of the
+        \textsf{propose-project} transaction $t$ of a project $P$
+        being accepted or rejected.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item The transaction \emph{origin} is a member of $\root$,
+    \item $\field{t}{hash}$ must be the hash of an existing transaction of
+        type \textsf{propose-project}. In other words, $P \in \pending$,
+        where $P$ is the project being registered.
+\end{itemize}
+
+\bigskip
+\noindent For \textsf{accept-project},
+\newline\outputs
+\begin{itemize}
+    \item $P \in \projects$
+    \item $P \notin \pending$
+    \item $\field{P}{account} = \tuple{\field{A}{id}, 0, 0}$
+\end{itemize}
+\bigskip
+\noindent For \textsf{reject-project},
+\newline\outputs
+\begin{itemize}
+    \item $P \notin \projects$
+    \item $P \notin \pending$
+\end{itemize}
+
+\subsection*{Project proposal withdrawal}
+It's possible to withdraw a project from proposal if it hasn't been
+accepted or rejected yet with:
+\[
+    \tx{withdraw-project}{\field{t}{hash}}.
+\]
+This in turn returns the deposit made on \textsf{propose-project}.
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{t}{hash}$ is the transaction hash of the \textsf{propose-project}
+            transaction $t$ for some project $P$ that should be withdrawn.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \pending$
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $P \notin \pending$
+        \item $\alpha_{bal'} = \alpha_{bal} + \deposit{propose-project}$.
+    \end{itemize}
+}
+
+\subsection*{Project Tokens}
+Projects are able to issue non-fungible tokens (NFTs) that can be used to
+access certain services or features around the project, such as support,
+licenses, issue and feature prioritization, or access to premium content.
+
+With NFTs, the registry functions as a decentralized ``licensing server'',
+which grants a token holder access to certain services. Acquiring NFTs
+is done by transfer from another holder, or purchase directly from the
+project.
+
+A token is formally represented as:
+\[
+    \theta = \tuple{\field{\theta}{id}, \field{\theta}{proj}, \field{\theta}{tag},
+                    \field{\theta}{price}}
+\]
+where $\field{\theta}{id}$ uniquely identifies a token unit. The set of
+all tokens is $\Theta$.
+
+\subsection*{Token issuance}
+\[
+    \tx{issue-tokens}{\field{\theta}{proj}, \field{\theta}{tag}, \field{\theta}{price}, n}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{\theta}{proj}$ is the id of the project $P$ issuing the token,
+        \item $\field{\theta}{tag}$ is a project-scoped tag to be associated with the issued tokens,
+        \item $\field{\theta}{price}$ is the price for one token, in the native currency,
+        \item $n$ is the number of tokens to issue with that tag and price.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $P \in \projects$,
+        \item $\field{\theta}{tag} \in \bin_{32}$,
+        \item $\field{\theta}{price} \in \nat_{\geq 0}$,
+        \item $n \geq 1$,
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\Theta' = \Theta \cup \theta_{0} \ldots \theta_{n}$
+    \end{itemize}}
+Note that $\field{\theta}{tag}$ can be re-used to re-issue tokens with the same tag (but a potentially different price) multiple times. The tag is an arbitrary value meant to represent
+the type of NFT being purchased.
+
+\subsection*{Token revocation}
+\[
+    \tx{revoke-tokens}{\field{\theta}{id_0} \ldots \field{\theta}{id_n}}
+\]
+
+\subsection*{Token purchase}
+\[
+    \tx{purchase-token}{\field{\theta}{id}}
+\]
+
+\subsection*{Token transfer}
+\[
+    \tx{transfer-token}{\field{\theta}{id}, \field{A}{id}}
+\]
+
+\section*{Appendix B. Names}
+
+\subsection*{Root accounts}
+Some accounts are considered \emph{privileged}. These `root' accounts,
+formally $\root \subset \accounts$ are authorized to conduct certain transactions
+that are only valid when originating from these accounts.
+
+The set of accounts in $\root$ is defined at \emph{genesis}, and may not be
+further modified in the initial protocol.
+
+\subsection*{Registering a domain}
+The act of registering a top-level domain:
+\[
+    \tx{register-domain}{domain}
+\]
+\inputs
+\begin{itemize}
+    \item $domain$ is the unique domain being registered.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item The transaction origin $\alpha$ is a member of $\root$,
+    \item $domain$ must be available for registration, between $1$ and $32$
+        characters long, and valid \textsf{UTF-8}.
+\end{itemize}
+For example,
+\[
+    \tx{register-domain}{\mathtt{crates}}
+\]
+
+\subsection*{Distribution contracts}
+A distribution contract can be described as a function:
+\[
+    f : \txs \to \mathcal{O}
+\]
+where $\txs$ is any known transaction, and $\mathcal{O}$ is the
+function's codomain described by:
+\[
+    \{\top, \bot\} \cup [\distribution] \cup \nat.
+\]
+An output in $\{\top, \bot\}$ is reserved for \emph{boolean} contracts,
+where $\top$ signifies a transaction $t \in \txs$ is
+\emph{authorized} to execute by the contract, and $\bot$ means it
+is \emph{unauthorized}.  Note that a transaction can be verified
+and included in the transaction ledger $\txs$ yet still be
+unauthorized to run.
+
+An output in $[\distribution]$ is reserved for transactions
+that should trigger a distribution of funds to one or more
+contract-specified beneficiaries, where $\field{A}{id}$ is the
+account of one of the beneficiaries, and $\nat$ is the value to
+transfer.
+
+An output in $\nat$ is reserved for transactions that should
+trigger a transfer of funds to an a priori \emph{known} beneficiary
+that shouldn't be determined by the contract. For example, the transaction
+origin.

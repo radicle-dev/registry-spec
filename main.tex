@@ -1,4 +1,4 @@
-\documentclass[a4paper, oneside, 10pt, final]{amsart}
+\documentclass[a4paper, oneside, 11pt, final]{amsart}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -21,6 +21,7 @@
 \def\accounts{\mathcal{A}}
 \def\txs{\mathcal{T}}
 \def\projects{\mathcal{P}}
+\def\orgs{\mathcal{O}}
 \def\root{\mathcal{A}_R}
 \def\radicle{\textsc{\small Radicle}}
 \def\state{\mathcal{S}}
@@ -39,12 +40,14 @@
 \def\nat{\mathbb{N}}
 \def\bin{\mathbb{B}}
 \def\distribution{\tuple{\field{A}{id}, \mathbb{N}}}
+\def\origin{\alpha}
 
 \newcommand{\tuple}[1]{\langle#1\rangle}
 \newcommand{\mathsc}[1]{\text{\normalfont\scshape#1}}
 \newcommand{\dep}{\xrightharpoondown[e]{d}}
 \newcommand{\tx}[2]{\operatorname{\mathsf{#1}}\lparen#2\rparen_\sigma}
 \newcommand{\txmsg}[2]{\operatorname{\mathsf{#1}}\lparen#2\rparen}
+\newcommand{\txname}[1]{\textsf{#1}}
 \newcommand{\field}[2]{#1_{\mathsf{#2}}}
 \newcommand{\fn}[2]{\operatorname{#1}(#2)}
 \newcommand{\prop}[2]{#1.{\mathrm{#2}}}
@@ -73,19 +76,9 @@
 \let\@afterindenttrue\@afterindentfalse
 \makeatother
 
-\newenvironment{fig}
-  {\par\noindent\minipage{\linewidth}}
-  {\endminipage\bigskip}
-
 \setlist[description]{leftmargin=0.8cm, labelindent=\parindent}
 \setlist[itemize]{leftmargin=0.8cm, labelindent=\parindent}
 \setlist[enumerate]{leftmargin=0.8cm, labelindent=\parindent}
-
-\setlength{\textwidth}{\paperwidth}
-\addtolength{\textwidth}{-4cm}
-\setlength{\textheight}{\paperheight}
-\addtolength{\textheight}{-4cm}
-\addtolength{\footskip}{\baselineskip}
 
 \def\labelitemi{--}
 
@@ -100,15 +93,8 @@
 
 \title[Radicle Registry]{Radicle Registry \\ \vspace{0.5em}\Small{Specification} \\ {\tiny version 0.1}}
 \author{\Small Monadic\textsuperscript{$\dagger$}}
-
 \thanks{\textsuperscript{$\dagger$}Monadic, \texttt{team@monadic.xyz}}
 
 \maketitle
-
-\setlength{\columnsep}{1cm}
-\begin{multicols}{2}
-
 \input{body.tex}
-
-\end{multicols}
 \end{document}
