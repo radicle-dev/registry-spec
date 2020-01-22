@@ -495,41 +495,119 @@ the \textsf{fund} transaction is used:
         \item $\field{A}{bal'} = \field{A}{bal} + v$
     \end{itemize}}
 
-\section{Identity}
+\section{User Identity}
 
-\subsection{Identifying as a contributor}
-The act of identifying yourself as a contributor, by linking a public key used
-to sign project contributions, to an account in the registry:
+Identity in the registry serves as a way for users to consolidate the various
+keys and external identities they use under a short, human-readable name.
+
+A user $U$ is a logical grouping of {\em identities}, or user identifiers under a
+single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
 \[
-    \tx{identify}{\field{I}{pk}, \field{I}{proof}}
+    U = \tuple{\field{U}{id}, \field{U}{account}, \field{U}{keys}}
+\]
+\spec{
+    \definition
+    \begin{itemize}
+        \item $\field{U}{id}$ is the globally unique human-readable identifier of the user,
+        \item $\field{U}{account}$ is the account id which owns this user identity,
+        \item $\field{U}{keys}$ is the set of off-registry public keys associated
+            with this identity.
+    \end{itemize}}
+
+\subsection{Registering}
+We register a new user identity and thus user
+\[
+    \tx{register-identity}{\field{U}{id}}
+\]
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{U}{id}$ is the gobally unique user identifier being registered,
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $\field{U}{id}$ must be unique, \ie not currently in use,
+        between $1$ and $32$ bytes long, and valid \textsf{UTF-8}.
+    \item $\field{\alpha}{bal} \geq \deposit{register-identity}$.
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $U \in \users$, where $U = \tuple{\field{U}{id}, \field{\origin}{id}, \varnothing}$
+    \item $\field{\alpha}{bal'} = \field{\alpha}{bal} - \deposit{register-identity}$
+\end{itemize}}
+
+\subsection{Unregistering}
+\[
+    \tx{unregister-identity}{\field{U}{id}}
+\]
+
+\spec{
+\inputs
+\begin{itemize}
+    \item $\field{U}{id}$ is the identity being unregistered,
+\end{itemize}
+\validation
+\begin{itemize}
+    \item $U \in \users$,
+    \item $\origin$ must be the owner of this identity, in other words $\field{U}{account} \equiv \field{\origin}{id}$,
+\end{itemize}
+\outputs
+\begin{itemize}
+    \item $U \notin \users$,
+    \item $\field{\origin}{bal'} = \field{\origin}{bal} + \deposit{register-identity}$.
+\end{itemize}}
+
+\subsection{Associating an external key}
+The act of associating an external public key to a registered user identity:
+\[
+    \tx{associate-key}{\field{U}{id}, k, \pi}
 \]
 
 \spec{
     \inputs
     \begin{itemize}
-        \item $\field{I}{pk}$ is the public key that is to be associated with
-            the \emph{origin} account $\alpha$ if this transaction succeeds.
-        \item $\field{I}{proof}$ is a proof verifying that the transaction
-            author owns $\field{I}{pk}$.
+        \item $\field{U}{id}$ is the identity under which to associate the key,
+        \item $k$ is the public portion of the key pair $\tuple{k, S_k}$ that is to be
+            associated,
+        \item $\pi$ is a proof or signature verifying that the transaction
+            author owns $k$, defined as:
+            \[
+                \pi = \mathsf{encrypt(hash(\mathit{\field{U}{id}}), \mathit{S_k})}
+            \]
+            where $S_k$ is the secret key from which $k$ was derived.
     \end{itemize}
     \validation
     \begin{itemize}
-        \item $\field{I}{pk}$ is not already associated with an account,
-        \item $\field{I}{proof}$ is $\alpha_{id}$ signed by the secret key $sk$ that
-            $\field{I}{pk}$ was derived from. In other words,
-            \[
-                \field{I}{proof} = \mathsf{encrypt(hash(\alpha_{id}), \mathit{sk})}
-            \]
-            which is valid if
-            \[
-                \mathsf{decrypt}(\field{I}{proof}, \field{I}{pk}) \equiv
-                    \mathsf{hash(\alpha_{id})}
-            \]
+        \item $k \notin \field{U}{keys}$,
+        \item $k$ is a valid $32$ byte \textsf{Ed25519} key,
+        \item $\field{\origin}{id} \equiv \field{U}{account}$,
+        \item $\mathsf{decrypt}(\pi, k) \equiv \mathsf{hash(\mathit{\field{U}{id}})}$
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $k \in \field{U}{keys}$
     \end{itemize}}
 
-\subsection{Forgetting identities}
-When a public key associated with the \textsf{identify} transaction is lost or no
-longer used, the following transaction will `forget' the association:
+\subsection{Revoking an associated key}
+When a public key associated with the \textsf{associate-key} transaction is lost or no
+longer used, the following transaction will `revoke' the association:
 \[
-    \tx{forget}{\field{I}{pk}}
+    \tx{revoke-key}{\field{U}{id}, k}
 \]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{U}{id}$ is the identity under which the key is currently associated,
+        \item $k$ is the key being revoked,
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $k \in \field{U}{keys}$,
+        \item $\field{\origin}{id} \equiv \field{U}{account}$,
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $k \notin \field{U}{keys}$
+    \end{itemize}}

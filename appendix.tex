@@ -298,3 +298,40 @@ An output in $\nat$ is reserved for transactions that should
 trigger a transfer of funds to an a priori \emph{known} beneficiary
 that shouldn't be determined by the contract. For example, the transaction
 origin.
+
+\section{Identifying as a contributor}
+The act of identifying yourself as a contributor, by linking a public key used
+to sign project contributions, to an account in the registry:
+\[
+    \tx{identify}{\field{I}{pk}, \field{I}{proof}}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{I}{pk}$ is the public key that is to be associated with
+            the \emph{origin} account $\alpha$ if this transaction succeeds.
+        \item $\field{I}{proof}$ is a proof verifying that the transaction
+            author owns $\field{I}{pk}$.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{I}{pk}$ is not already associated with an account,
+        \item $\field{I}{proof}$ is $\alpha_{id}$ signed by the secret key $sk$ that
+            $\field{I}{pk}$ was derived from. In other words,
+            \[
+                \field{I}{proof} = \mathsf{encrypt(hash(\alpha_{id}), \mathit{sk})}
+            \]
+            which is valid if
+            \[
+                \mathsf{decrypt}(\field{I}{proof}, \field{I}{pk}) \equiv
+                    \mathsf{hash(\alpha_{id})}
+            \]
+    \end{itemize}}
+
+\subsection{Forgetting identities}
+When a public key associated with the \textsf{identify} transaction is lost or no
+longer used, the following transaction will `forget' the association:
+\[
+    \tx{forget}{\field{I}{pk}}
+\]
