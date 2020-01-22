@@ -227,6 +227,35 @@ The act of updating a org's contract:
         \item $\field{O}{contract} = c$
     \end{itemize}}
 
+\subsection{The fund}
+\label{s:fund}
+Each org has an associated account $\field{O}{account}$ called the
+\emph{fund}. To use that account to fund maintenance of projects,
+the \textsf{fund} transaction is used:
+\[
+    \tx{fund}{\field{O}{id}, \field{A}{id}, v}
+\]
+
+\spec{
+    \inputs
+    \begin{itemize}
+        \item $\field{O}{id}$ is the id of the org from which the transfer
+            should be initiated,
+        \item $\field{A}{id}$ is the id of the account that should receive
+            the transfer,
+        \item $v$ is the value to transfer.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{O}{account_{bal}} - \deposit{register-org} \geq v$,
+        \item The transaction author is authorized to execute \txname{fund},
+    \end{itemize}
+    \outputs
+    \begin{itemize}
+        \item $\field{A}{bal'} = \field{A}{bal} + v$
+        \item $\field{O}{account_{bal'}} = \field{O}{account_{bal}} - v$
+    \end{itemize}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Projects}
@@ -309,10 +338,9 @@ context of an org.
 
 \subsection{Checkpointing}
 \label{s:checkpoint}
-The act of anchoring a project's state and updating the network graph:
+The act of anchoring a project's state in the registry:
 \[
-    \tx{checkpoint}{\field{K}{parent}, \field{K}{hash}, \field{K}{version},
-    \field{K}{contribs}, \field{K}{deps}}
+    \tx{checkpoint}{\field{K}{parent}, \field{K}{hash}}
 \]
 Checkpoints within the scope of a single project form a chain going from the
 latest, or ``current'' checkpoint $k_{n-1}$ to the first and original
@@ -327,9 +355,6 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
 \begin{itemize}
     \item $\field{K}{parent}$ is the \emph{id} of the previous or `parent' checkpoint,
     \item $\field{K}{hash}$ is the new hash of the project state,
-    \item $\field{K}{version}$ is the current version of the project,
-    \item $\field{K}{contribs}$ is the list of contributions since $\field{K}{parent}$,
-    \item $\field{K}{deps}$ is the list of dependency updates since the $\field{K}{parent}$.
 \end{itemize}
 \validation
 \begin{itemize}
@@ -337,126 +362,29 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
         or is $\varnothing$.}
     \item{$\field{K}{hash}$ is a valid hash that hasn't been used in a parent
         checkpoint.}
-    \item{$\field{K}{version}$ is a string between $1$ and $32$ bytes long that
-        \emph{may} have been used in a previous project checkpoint.}
-    \item{$\field{K}{contribs}$ is a valid contribution list (See \S
-        \ref{s:checkpoint-contribs}).}
-    \item{$\field{K}{deps}$ is a valid dependency update list (See \S
-        \ref{s:checkpoint-deps}).}
 \end{itemize}
-
-\subsection{Contributions}
-\label{s:checkpoint-contribs}
-The list $\field{K}{contribs}$ supplied to the $\mathsf{checkpoint}$
-transaction is of the form:
-
-\[
-    \field{K}{contribs} = [\tuple{\field{C}{parent}, \field{C}{hash},
-    \field{C}{author}, \field{C}{sig}}],
-\]
-
-\spec{
-    \definition
-    \begin{itemize}
-        \item $\field{C}{parent}$ is the hash of the parent contribution, or
-            $\varnothing$ if this is the first contribution of the first checkpoint
-            of the project.
-        \item $\field{C}{hash}$ is the hash of the corresponding commit,
-        \item $\field{C}{author}$ is the public signing key of the commit referred
-            to by $C$,
-        \item $\field{C}{sig}$ is the author's \textsf{GPG} signature.
-    \end{itemize}
-    \validation
-    \begin{itemize}
-        \item $\field{C}{parent}$ is a valid \textsf{SHA-1} hash or
-            $\varnothing$ if this is the first contribution. Note that if $C$
-            is $\field{K}{contribs}$'s first item, and $C'$ is the \emph{last}
-            item of the \emph{parent} checkpoint's contributions list, then
-            $\field{C'}{hash}$ and $\field{C}{parent}$ must be equal, such that
-            no gaps between contributions exist.
-
-        \item $\field{C}{hash}$ is a valid \textsf{SHA-1} hash,
-        \item $\field{C}{author}$ is the creator of $\field{C}{sig}$,
-        \item $\field{C}{sig}$ is a valid signature of $\field{C}{hash}$.
-    \end{itemize}
-}
-Because all changes to a project's source code are described in checkpoints, it
-is possible to reconstruct a full hash-linked list of contributions for the
-entire project. When cross-referenced with the project's repository, this
-constitutes a complete historical record of who authored what code. This
-ensures the project history is auditable and tamper-proof, while providing
-fundamental information to for the network graph $\netgraph$. Note that only
-contribution \emph{metadata} is stored on-chain.
-
-\subsection{Dependency updates}
-\label{s:checkpoint-deps}
-Conceptually, a project $P$ depends on another project $P'$ if it is an
-``input'' to $P$ in some way: $P$ references $P'$ or parts of $P'$ in its
-source code, or $P'$ is a build/test dependency.
-
-The dependency update list $\field{P}{deps}$ is a list of \emph{dependency
-  updates}, one of:
-\[
-    \begin{cases}
-        \depend(\field{P'}{id}, \field{P'}{version}) \\
-        \undepend(\field{P'}{id}, \field{P'}{version})
-    \end{cases}
-\]
-which refer to the project $P'$ at a specific version $\field{P'}{version}$.
-The $\depend$ update adds a new dependency while the $\undepend$ update removes
-a dependency. The updates are processed in order with $\depend$ only being
-valid if it adds a dependency that the project does not already have and
-$\undepend$ only being valid for current dependencies. The checkpoint is
-invalid if the update list contains duplicates.
-
-% NOTE: Should the checkpoints include the hash of the project being depended
-% on? This would add another check for projects registering.
-
-\bigskip
-\validation
-\begin{itemize}
-    \item $\field{P'}{id}$ must be a valid project id, but \emph{does not}
-        have to refer to an existing id in the registry. This allows dependent
-        projects to checkpoint dependencies that have not yet been registered.
-    \item $\field{P'}{version}$ must be a valid version string, but \emph{does not}
-        have to refer to an existing version of $P'$. This allows dependent projects
-        to checkpoint before their dependencies.
-\end{itemize}
-As a project maintainer, adding a dependency signals a variety of things
-depending of the nature of the project:
-\begin{itemize}
-\item They have verified that $P$ indeed depends on this specific
-  version of $P'$.
-\item That $P'$ is suitable as a dependency for $P$, \eg{} if $P$ has
-  very high security requirements, that $P'$ fulfills these.
-\end{itemize}
-\noindent Since contributions to a project carry additional
-weight---potentially increasing a project's rank---there is an incentive
-for maintainers to checkpoint their projects regularly.  Similarly, adding
-dependencies may increase connectivity in the network graph, which may in turn
-indirectly improve a project's rank.
 
 \subsection{Setting the project checkpoint}
 The act of updating the project to point to a new checkpoint:
 \[
-    \tx{set-checkpoint}{\field{P}{id}, k'}
+    \tx{set-checkpoint}{\field{P}{org}, \field{P}{id}, k'}
 \]
 which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
 
 \spec{
     \inputs
     \begin{itemize}
+        \item $\field{P}{org}$ is the id of the org $O$ under which the project lives,
         \item $\field{P}{id}$ is the id of the project being updated,
         \item $k'$ is the id of the checkpoint the project
             should be associated to.
     \end{itemize}
     \validation
     \begin{itemize}
-        \item $\field{P}{id}$ refers to a project that has been accepted
-            in the registry,
+        \item $\field{P}{id} \in \field{O}{projs}$, or $P$ lives under $O$,
         \item $k'$ is a checkpoint which has the original project checkpoint
-            $k_0$ in its ancestry.
-        \item $\field{P}{contract}(\txmsg{set-checkpoint}{\field{P}{id}, k'}) \equiv \top$
+            $k_0$ in its ancestry,
+        \item The transaction author is authorized to execute \textsf{set-checkpoint}.
     \end{itemize}
     \outputs
     \begin{itemize}
@@ -465,35 +393,6 @@ which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
 Note that the semantics of this transaction allows for projects to revert to
 a previous checkpoint, or to adopt a ``fork'', as long as the new checkpoint
 shares part of its ancestry with the previous checkpoint.
-
-\subsection{The project fund}
-\label{s:fund}
-Each project has an associated account $\field{P}{account}$ called the
-\emph{fund}. To use that account to fund maintenance or other projects,
-the \textsf{fund} transaction is used:
-\[
-    \tx{fund}{\field{P}{id}, \field{A}{id}, v}
-\]
-
-\spec{
-    \inputs
-    \begin{itemize}
-        \item $\field{P}{id}$ is the id of the project that should initiate
-            the value transfer.
-        \item $\field{A}{id}$ is the id of the account that should receive
-            the value.
-        \item $v$ is the value being transfered.
-    \end{itemize}
-    \validation
-    \begin{itemize}
-        \item $\field{p}{bal} \geq v$, where $p = \field{P}{account}$,
-        % TODO: Update this if we have deposits.
-        \item $\field{P}{contract}(\txmsg{fund}{\field{P}{id}, \field{A}{id}, v}) \equiv \top$.
-    \end{itemize}
-    \outputs
-    \begin{itemize}
-        \item $\field{A}{bal'} = \field{A}{bal} + v$
-    \end{itemize}}
 
 \section{User Identity}
 

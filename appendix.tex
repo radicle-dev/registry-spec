@@ -335,3 +335,132 @@ longer used, the following transaction will `forget' the association:
 \[
     \tx{forget}{\field{I}{pk}}
 \]
+
+\section{Checkpointing contribution and dependency information}
+\label{s:checkpoint}
+The act of anchoring a project's state and updating the network graph:
+\[
+    \tx{checkpoint}{\field{K}{parent}, \field{K}{hash}, \field{K}{version},
+    \field{K}{contribs}, \field{K}{deps}}
+\]
+Checkpoints within the scope of a single project form a chain going from the
+latest, or ``current'' checkpoint $k_{n-1}$ to the first and original
+checkpoint $k_0$. Checkpoints are identified by their transaction hash,
+so $k \in \field{T}{hash}$.
+
+From the perspective of $k_0$, we can talk of a checkpoint \emph{tree}, since
+due to their nature, they are able to represent branching. Hence, the original
+checkpoint $k_0$ is also called the \emph{root} checkpoint.
+
+\inputs
+\begin{itemize}
+    \item $\field{K}{parent}$ is the \emph{id} of the previous or `parent' checkpoint,
+    \item $\field{K}{hash}$ is the new hash of the project state,
+    \item $\field{K}{version}$ is the current version of the project,
+    \item $\field{K}{contribs}$ is the list of contributions since $\field{K}{parent}$,
+    \item $\field{K}{deps}$ is the list of dependency updates since the $\field{K}{parent}$.
+\end{itemize}
+\validation
+\begin{itemize}
+    \item{$\field{K}{parent}$ refers to an existing checkpoint in the registry,
+        or is $\varnothing$.}
+    \item{$\field{K}{hash}$ is a valid hash that hasn't been used in a parent
+        checkpoint.}
+    \item{$\field{K}{version}$ is a string between $1$ and $32$ bytes long that
+        \emph{may} have been used in a previous project checkpoint.}
+    \item{$\field{K}{contribs}$ is a valid contribution list (See \S
+        \ref{s:checkpoint-contribs}).}
+    \item{$\field{K}{deps}$ is a valid dependency update list (See \S
+        \ref{s:checkpoint-deps}).}
+\end{itemize}
+
+\subsection{Contributions}
+\label{s:checkpoint-contribs}
+The list $\field{K}{contribs}$ supplied to the $\mathsf{checkpoint}$
+transaction is of the form:
+
+\[
+    \field{K}{contribs} = [\tuple{\field{C}{parent}, \field{C}{hash},
+    \field{C}{author}, \field{C}{sig}}],
+\]
+
+\spec{
+    \definition
+    \begin{itemize}
+        \item $\field{C}{parent}$ is the hash of the parent contribution, or
+            $\varnothing$ if this is the first contribution of the first checkpoint
+            of the project.
+        \item $\field{C}{hash}$ is the hash of the corresponding commit,
+        \item $\field{C}{author}$ is the public signing key of the commit referred
+            to by $C$,
+        \item $\field{C}{sig}$ is the author's \textsf{GPG} signature.
+    \end{itemize}
+    \validation
+    \begin{itemize}
+        \item $\field{C}{parent}$ is a valid \textsf{SHA-1} hash or
+            $\varnothing$ if this is the first contribution. Note that if $C$
+            is $\field{K}{contribs}$'s first item, and $C'$ is the \emph{last}
+            item of the \emph{parent} checkpoint's contributions list, then
+            $\field{C'}{hash}$ and $\field{C}{parent}$ must be equal, such that
+            no gaps between contributions exist.
+
+        \item $\field{C}{hash}$ is a valid \textsf{SHA-1} hash,
+        \item $\field{C}{author}$ is the creator of $\field{C}{sig}$,
+        \item $\field{C}{sig}$ is a valid signature of $\field{C}{hash}$.
+    \end{itemize}
+}
+Because all changes to a project's source code are described in checkpoints, it
+is possible to reconstruct a full hash-linked list of contributions for the
+entire project. When cross-referenced with the project's repository, this
+constitutes a complete historical record of who authored what code. This
+ensures the project history is auditable and tamper-proof, while providing
+fundamental information to for the network graph $\netgraph$. Note that only
+contribution \emph{metadata} is stored on-chain.
+
+\subsection{Dependency updates}
+\label{s:checkpoint-deps}
+Conceptually, a project $P$ depends on another project $P'$ if it is an
+``input'' to $P$ in some way: $P$ references $P'$ or parts of $P'$ in its
+source code, or $P'$ is a build/test dependency.
+
+The dependency update list $\field{P}{deps}$ is a list of \emph{dependency
+  updates}, one of:
+\[
+    \begin{cases}
+        \depend(\field{P'}{id}, \field{P'}{version}) \\
+        \undepend(\field{P'}{id}, \field{P'}{version})
+    \end{cases}
+\]
+which refer to the project $P'$ at a specific version $\field{P'}{version}$.
+The $\depend$ update adds a new dependency while the $\undepend$ update removes
+a dependency. The updates are processed in order with $\depend$ only being
+valid if it adds a dependency that the project does not already have and
+$\undepend$ only being valid for current dependencies. The checkpoint is
+invalid if the update list contains duplicates.
+
+% NOTE: Should the checkpoints include the hash of the project being depended
+% on? This would add another check for projects registering.
+
+\bigskip
+\validation
+\begin{itemize}
+    \item $\field{P'}{id}$ must be a valid project id, but \emph{does not}
+        have to refer to an existing id in the registry. This allows dependent
+        projects to checkpoint dependencies that have not yet been registered.
+    \item $\field{P'}{version}$ must be a valid version string, but \emph{does not}
+        have to refer to an existing version of $P'$. This allows dependent projects
+        to checkpoint before their dependencies.
+\end{itemize}
+As a project maintainer, adding a dependency signals a variety of things
+depending of the nature of the project:
+\begin{itemize}
+\item They have verified that $P$ indeed depends on this specific
+  version of $P'$.
+\item That $P'$ is suitable as a dependency for $P$, \eg{} if $P$ has
+  very high security requirements, that $P'$ fulfills these.
+\end{itemize}
+\noindent Since contributions to a project carry additional
+weight---potentially increasing a project's rank---there is an incentive
+for maintainers to checkpoint their projects regularly.  Similarly, adding
+dependencies may increase connectivity in the network graph, which may in turn
+indirectly improve a project's rank.
