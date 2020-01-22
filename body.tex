@@ -116,7 +116,7 @@ and funds. An org $O$ is a tuple:
     \item $O \in \orgs$, where $O =
         \tuple{\field{O}{id},
             \field{O}{account},
-            \{\origin\},
+            \{\field{\origin}{id}\},
             \varnothing,
             \field{O}{contract}}$
     \item $\field{O}{account} \in \accounts$,
@@ -136,7 +136,7 @@ and funds. An org $O$ is a tuple:
 \validation
 \begin{itemize}
     \item $O \in \orgs$,
-    \item $\field{O}{members} = \{\origin\}$, the transaction origin must be the
+    \item $\field{O}{members} = \{\field{\origin}{id}\}$, the transaction origin must be the
         only member,
     \item $\field{O}{projs} = \varnothing$, there must be no projects under the
         org,
