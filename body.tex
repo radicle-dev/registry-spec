@@ -93,7 +93,7 @@ and funds. An org $O$ is a tuple:
             still be unauthorized to run by the contract
     \end{itemize}}
 
-\subsection{Registering orgs}
+\subsection{Registering}
 \[
     \tx{register-org}{\field{O}{id}, \field{O}{contract}}
 \]
@@ -123,7 +123,7 @@ and funds. An org $O$ is a tuple:
     \item $\field{\alpha}{bal'} = \field{\alpha}{bal} - \deposit{register-org}$.
 \end{itemize}}
 
-\subsection{Unregistering orgs}
+\subsection{Unregistering}
 \[
     \tx{unregister-org}{\field{O}{id}}
 \]
@@ -147,7 +147,7 @@ and funds. An org $O$ is a tuple:
     \item $\field{\alpha}{bal'} = \field{\alpha}{bal} + \deposit{register-org} + \field{O}{account_{bal}}$.
 \end{itemize}}
 
-\subsection{Registering org members}
+\subsection{Registering members}
 \[
     \tx{register-member}{\field{O}{id}, \field{A}{id}}
 \]
@@ -171,7 +171,7 @@ and funds. An org $O$ is a tuple:
     \item $\alpha_{bal'} = \alpha_{bal} - \deposit{register-member}$.
 \end{itemize}}
 
-\subsection{Unregistering org members}
+\subsection{Unregistering members}
 \[
     \tx{unregister-member}{\field{O}{id}, \field{A}{id}}
 \]
@@ -194,7 +194,7 @@ and funds. An org $O$ is a tuple:
     \item $\alpha_{bal'} = \alpha_{bal} + \deposit{register-member}$.
 \end{itemize}}
 
-\subsection{The org contract}
+\subsection{The Contract}
 Every org $O$ in the registry has a contract denoted $\field{O}{contract}$.
 The way this contract is invoked is through transactions that act on $O$. For
 example, the \textsf{fund} transaction (\S\ref{s:fund}) which transfers value
@@ -205,8 +205,7 @@ A contract is made of a set of \emph{rules} that each handle a specific action
 relating to the org. In the \textsf{fund} example, the \textsf{fund}
 \emph{rule} would be invoked to determine the outcome of the transaction.
 
-\subsection{Updating the org contract}
-The act of updating a org's contract:
+Setting the org's contract is done with:
 \[
     \tx{set-contract}{\field{O}{id}, c}
 \]
@@ -227,7 +226,7 @@ The act of updating a org's contract:
         \item $\field{O}{contract} = c$
     \end{itemize}}
 
-\subsection{The fund}
+\subsection{The Fund}
 \label{s:fund}
 Each org has an associated account $\field{O}{account}$ called the
 \emph{fund}. To use that account to fund maintenance of projects,
@@ -336,7 +335,7 @@ context of an org.
 \end{itemize}}
 
 
-\subsection{Checkpointing}
+\subsection{Creating a checkpoint}
 \label{s:checkpoint}
 The act of anchoring a project's state in the registry:
 \[
@@ -364,7 +363,7 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
         checkpoint.}
 \end{itemize}
 
-\subsection{Setting the project checkpoint}
+\subsection{Setting a checkpoint}
 The act of updating the project to point to a new checkpoint:
 \[
     \tx{set-checkpoint}{\field{P}{org}, \field{P}{id}, k'}
@@ -488,7 +487,7 @@ The act of associating an external public key to a registered user identity:
         \item $k \in \field{U}{keys}$
     \end{itemize}}
 
-\subsection{Revoking an associated key}
+\subsection{Revoking an external key}
 When a public key associated with the \textsf{associate-key} transaction is lost or no
 longer used, the following transaction will `revoke' the association:
 \[
