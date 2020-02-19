@@ -260,7 +260,7 @@ the \textsf{fund} transaction is used:
 \section{Projects}
 A project $P$ is a tuple:
 \[
-    P = \tuple{\field{P}{id}, \field{P}{org}, \field{P}{k}, \field{P}{proof}, \field{P}{meta}}
+    P = \tuple{\field{P}{id}, \field{P}{org}, \field{P}{k}, \field{P}{meta}}
 \]
 
 \spec{
@@ -269,8 +269,6 @@ A project $P$ is a tuple:
         \item $\field{P}{id}$ is the unique project identifier within the context of an $\field{P}{org}$,
         \item $\field{P}{org}$ is the org under which this project lives,
         \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
-        \item $\field{P}{proof}$ is the proof that was supplied during proposal,
-            verifying the owner's authority over the project,
         \item $\field{P}{meta}$ is opaque metadata to associate with $P$. For
             example, the \radicle{} \emph{project id}. Note that once defined, the
             metadata is immutable.
