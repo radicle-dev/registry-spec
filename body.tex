@@ -115,6 +115,7 @@ and funds. An org $O$ is a tuple:
             \item Must only contain \texttt{a-z}, \texttt{0-9} and `\texttt{-}'
                 characters.
             \item Must not start or end with a `\texttt{-}'.
+            \item Must not contain sequences of more than one `\texttt{-}'.
         \end{itemize}
     \item $\field{\alpha}{bal} \geq \deposit{register-org}$.
 \end{itemize}
@@ -442,6 +443,7 @@ We register a new user identity and thus user
             \item Must only contain \texttt{a-z}, \texttt{0-9} and `\texttt{-}'
                 characters.
             \item Must not start or end with a `\texttt{-}'.
+            \item Must not contain sequences of more than one `\texttt{-}'.
         \end{itemize}
     \item $\field{\alpha}{bal} \geq \deposit{register-identity}$.
 \end{itemize}
