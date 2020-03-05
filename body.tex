@@ -111,7 +111,7 @@ and funds. An org $O$ is a tuple:
         identifier {\em nor} as a user identifier, and comply with the following
         rules:
         \begin{itemize}
-            \item Must be between $1$ and $32$ bytes long.
+            \item Must be between $1$ and $32$ ASCII-encoded characters.
             \item Must only contain \texttt{a-z}, \texttt{0-9} and `\texttt{-}'
                 characters.
             \item Must not start or end with a `\texttt{-}'.
@@ -308,7 +308,7 @@ The tuple $\tuple{\field{P}{org}, \field{P}{name}}$ is also known as $\field{P}{
     \item $\field{P}{name}$ complies with the
         following rules:
         \begin{itemize}
-            \item Must be between $1$ and $32$ bytes long.
+            \item Must be between $1$ and $32$ ASCII-encoded characters.
             \item Must only contain \texttt{a-z}, \texttt{0-9}, `\texttt{-}'
                 and `\texttt{\_}' characters.
         \end{itemize}
@@ -441,7 +441,7 @@ We register a new user identity and thus user
     \item $\field{U}{id}$ must be unique, \ie not currently in use as a user
         identifier {\em nor} as an org identifier, and comply with the following rules:
         \begin{itemize}
-            \item Must be between $1$ and $32$ bytes long.
+            \item Must be between $1$ and $32$ ASCII-encoded characters.
             \item Must only contain \texttt{a-z}, \texttt{0-9} and `\texttt{-}'
                 characters.
             \item Must not start or end with a `\texttt{-}'.
