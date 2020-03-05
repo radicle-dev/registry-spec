@@ -108,7 +108,7 @@ and funds. An org $O$ is a tuple:
 \validation
 \begin{itemize}
     \item $\field{O}{id}$ must be unique, \ie not currently in use as an org
-        identifier {\em or} user identifier, and comply with the following
+        identifier {\em nor} as a user identifier, and comply with the following
         rules:
         \begin{itemize}
             \item Must be between $1$ and $32$ bytes long.
@@ -437,7 +437,7 @@ We register a new user identity and thus user
 \validation
 \begin{itemize}
     \item $\field{U}{id}$ must be unique, \ie not currently in use as a user
-        identifier {\em or} org identifier, and comply with the following rules:
+        identifier {\em nor} as an org identifier, and comply with the following rules:
         \begin{itemize}
             \item Must be between $1$ and $32$ bytes long.
             \item Must only contain \texttt{a-z}, \texttt{0-9} and `\texttt{-}'
