@@ -414,7 +414,7 @@ keys and external identities they use under a short, human-readable name.
 A user $U$ is a logical grouping of {\em identities}, or user identifiers under a
 single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
 \[
-    U = \tuple{\field{U}{id}, \field{U}{account}, \field{U}{keys}}
+    U = \tuple{\field{U}{id}, \field{U}{account}, \field{U}{keys}, \field{U}{meta}}
 \]
 \spec{
     \definition
@@ -423,18 +423,22 @@ single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
         \item $\field{U}{account}$ is the account id which owns this user identity,
         \item $\field{U}{keys}$ is the set of off-registry public keys associated
             with this identity.
+        \item $\field{U}{meta}$ is associated user metadata.
     \end{itemize}}
 
 \subsection{Registering}
 We register a new user identity and thus user
 \[
-    \tx{register-user}{\field{U}{id}}
+    \tx{register-user}{\field{U}{id}, \field{U}{meta}}
 \]
 
 \spec{
 \inputs
 \begin{itemize}
     \item $\field{U}{id}$ is the gobally unique user identifier being registered,
+    \item $\field{U}{meta}$ is opaque metadata to associate with $U$. For
+        example, the \radicle{} \emph{user id}. Note that once defined, the
+        metadata is immutable.
 \end{itemize}
 \validation
 \begin{itemize}
@@ -447,11 +451,12 @@ We register a new user identity and thus user
             \item Must not start or end with a `\texttt{-}'.
             \item Must not contain sequences of more than one `\texttt{-}'.
         \end{itemize}
+    \item $\field{U}{meta}$ is $\leq 128$ bytes long,
     \item $\field{\alpha}{bal} \geq \deposit{register-user}$.
 \end{itemize}
 \outputs
 \begin{itemize}
-    \item $U \in \users$, where $U = \tuple{\field{U}{id}, \field{\origin}{id}, \varnothing}$
+    \item $U \in \users$, where $U = \tuple{\field{U}{id}, \field{\origin}{id}, \varnothing, \field{U}{meta}}$
     \item $\field{\alpha}{bal'} = \field{\alpha}{bal} - \deposit{register-user}$
 \end{itemize}}
 
