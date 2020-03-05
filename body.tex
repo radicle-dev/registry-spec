@@ -274,7 +274,7 @@ A project $P$ is a tuple:
 \spec{
     \definition
     \begin{itemize}
-    \item $\field{P}{id}$ is the tuple $\projectid$ where $\Upsilon \in \orgs$ or $\Upsilon \in \users$,
+        \item $\field{P}{id}$ is the tuple $\projectid$ where $\Upsilon \in \orgs$ or $\Upsilon \in \users$,
         \item $\field{P}{name}$ is the unique project name within $\field{\Upsilon}{projs}$,
         \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
         \item $\field{P}{meta}$ is opaque metadata to associate with $P$. For
@@ -411,7 +411,7 @@ keys and external identities they use under a short, human-readable name.
 A user $U$ is a logical grouping of {\em identities}, or user identifiers under a
 single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
 \[
-    U = \tuple{\field{U}{id}, \field{U}{account}, \field{U}{keys}, \field{U}{meta}}
+    U = \tuple{\field{U}{id}, \field{U}{account}, \field{U}{keys}, \field{U}{meta}, \field{U}{projs}}
 \]
 \spec{
     \definition
@@ -421,6 +421,7 @@ single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
         \item $\field{U}{keys}$ is the set of off-registry public keys associated
             with this identity.
         \item $\field{U}{meta}$ is associated user metadata.
+        \item $\field{U}{projs}$ is the set of registered projects under this user,
     \end{itemize}}
 
 \subsection{Registering}
