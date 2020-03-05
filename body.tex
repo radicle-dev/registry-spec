@@ -428,7 +428,7 @@ single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
 \subsection{Registering}
 We register a new user identity and thus user
 \[
-    \tx{register-identity}{\field{U}{id}}
+    \tx{register-user}{\field{U}{id}}
 \]
 
 \spec{
@@ -447,17 +447,17 @@ We register a new user identity and thus user
             \item Must not start or end with a `\texttt{-}'.
             \item Must not contain sequences of more than one `\texttt{-}'.
         \end{itemize}
-    \item $\field{\alpha}{bal} \geq \deposit{register-identity}$.
+    \item $\field{\alpha}{bal} \geq \deposit{register-user}$.
 \end{itemize}
 \outputs
 \begin{itemize}
     \item $U \in \users$, where $U = \tuple{\field{U}{id}, \field{\origin}{id}, \varnothing}$
-    \item $\field{\alpha}{bal'} = \field{\alpha}{bal} - \deposit{register-identity}$
+    \item $\field{\alpha}{bal'} = \field{\alpha}{bal} - \deposit{register-user}$
 \end{itemize}}
 
 \subsection{Unregistering}
 \[
-    \tx{unregister-identity}{\field{U}{id}}
+    \tx{unregister-user}{\field{U}{id}}
 \]
 
 \spec{
@@ -473,7 +473,7 @@ We register a new user identity and thus user
 \outputs
 \begin{itemize}
     \item $U \notin \users$,
-    \item $\field{\origin}{bal'} = \field{\origin}{bal} + \deposit{register-identity}$.
+    \item $\field{\origin}{bal'} = \field{\origin}{bal} + \deposit{register-user}$.
 \end{itemize}}
 
 \subsection{Associating an external key}
