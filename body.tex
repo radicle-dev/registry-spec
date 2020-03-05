@@ -268,13 +268,13 @@ the \textsf{fund} transaction is used:
 \section{Projects}
 A project $P$ is a tuple:
 \[
-    P = \tuple{\field{P}{id}, \field{P}{org}, \field{P}{k}, \field{P}{meta}}
+    P = \tuple{\field{P}{name}, \field{P}{org}, \field{P}{k}, \field{P}{meta}}
 \]
 
 \spec{
     \definition
     \begin{itemize}
-        \item $\field{P}{id}$ is the unique project identifier within the context of an $\field{P}{org}$,
+        \item $\field{P}{name}$ is the unique project name within the context of an $\field{P}{org}$,
         \item $\field{P}{org}$ is the org under which this project lives,
         \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
         \item $\field{P}{meta}$ is opaque metadata to associate with $P$. For
@@ -287,13 +287,14 @@ context of an org.
 
 \subsection{Registering projects}
 \[
-    \tx{register-project}{\field{P}{org}, \field{P}{id}, \field{P}{k}, \field{P}{meta}}
+    \tx{register-project}{\field{P}{org}, \field{P}{name}, \field{P}{k}, \field{P}{meta}}
 \]
+The tuple $\tuple{\field{P}{org}, \field{P}{name}}$ is also known as $\field{P}{id}$.
 
 \spec{
 \inputs
 \begin{itemize}
-    \item $\field{P}{id}$ is the unique project id being requested,
+    \item $\field{P}{name}$ is the project name being requested,
     \item $\field{P}{org}$ is the id of the org under which to register $P$,
     \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
         with this project, formally $k_0$. This checkpoint must always remain
@@ -303,7 +304,8 @@ context of an org.
 \validation
 \begin{itemize}
     \item $\field{P}{org}$ identifies an existing org $O$,
-    \item $\field{P}{id}$ is unique under $O$, and complies with the
+    \item $\tuple{\field{P}{org}, \field{P}{name}}$ is globally unique,
+    \item $\field{P}{name}$ complies with the
         following rules:
         \begin{itemize}
             \item Must be between $1$ and $32$ bytes long.
@@ -323,13 +325,13 @@ context of an org.
 
 \subsection{Unregistering}
 \[
-    \tx{unregister-project}{\field{P}{org}, \field{P}{id}}
+    \tx{unregister-project}{\field{P}{org}, \field{P}{name}}
 \]
 
 \spec{
 \inputs
 \begin{itemize}
-    \item $\field{P}{id}$ is the project id being unregistered,
+    \item $\field{P}{name}$ is the project name being unregistered,
     \item $\field{P}{org}$ is the id of the org under which $P$ lives,
 \end{itemize}
 \validation
@@ -377,7 +379,7 @@ checkpoint $k_0$ is also called the \emph{root} checkpoint.
 \subsection{Setting a checkpoint}
 The act of updating the project to point to a new checkpoint:
 \[
-    \tx{set-checkpoint}{\field{P}{org}, \field{P}{id}, k'}
+    \tx{set-checkpoint}{\field{P}{org}, \field{P}{name}, k'}
 \]
 which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
 
@@ -385,13 +387,13 @@ which updates $\field{P}{checkpoint}$ from $k$ to $k'$.
     \inputs
     \begin{itemize}
         \item $\field{P}{org}$ is the id of the org $O$ under which the project lives,
-        \item $\field{P}{id}$ is the id of the project being updated,
+        \item $\field{P}{name}$ is the id of the project being updated,
         \item $k'$ is the id of the checkpoint the project
             should be associated to.
     \end{itemize}
     \validation
     \begin{itemize}
-        \item $\field{P}{id} \in \field{O}{projs}$, or $P$ lives under $O$,
+        \item $\field{P}{name} \in \field{O}{projs}$, or $P$ lives under $O$,
         \item $k'$ is a checkpoint which has the original project checkpoint
             $k_0$ in its ancestry,
         \item The transaction author is authorized to execute \textsf{set-checkpoint}.
