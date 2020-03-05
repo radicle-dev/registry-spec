@@ -268,14 +268,14 @@ the \textsf{fund} transaction is used:
 \section{Projects}
 A project $P$ is a tuple:
 \[
-    P = \tuple{\field{P}{name}, \field{P}{org}, \field{P}{k}, \field{P}{meta}}
+    P = \tuple{\field{P}{id}, \field{P}{k}, \field{P}{meta}}
 \]
 
 \spec{
     \definition
     \begin{itemize}
-        \item $\field{P}{name}$ is the unique project name within the context of an $\field{P}{org}$,
-        \item $\field{P}{org}$ is the org under which this project lives,
+    \item $\field{P}{id}$ is the tuple $\projectid$ where $\Upsilon \in \orgs$ or $\Upsilon \in \users$,
+        \item $\field{P}{name}$ is the unique project name within $\field{\Upsilon}{projs}$,
         \item $\field{P}{k}$ is the current project \emph{checkpoint} (See \S\ref{s:checkpoint}),
         \item $\field{P}{meta}$ is opaque metadata to associate with $P$. For
             example, the \radicle{} \emph{project id}. Note that once defined, the
@@ -287,15 +287,13 @@ context of an org.
 
 \subsection{Registering projects}
 \[
-    \tx{register-project}{\field{P}{org}, \field{P}{name}, \field{P}{k}, \field{P}{meta}}
+    \tx{register-project}{\field{P}{id}, \field{P}{k}, \field{P}{meta}}
 \]
-The tuple $\tuple{\field{P}{org}, \field{P}{name}}$ is also known as $\field{P}{id}$.
 
 \spec{
 \inputs
 \begin{itemize}
-    \item $\field{P}{name}$ is the project name being requested,
-    \item $\field{P}{org}$ is the id of the org under which to register $P$,
+    \item $\field{P}{id} = \projectid$ is the requested id of the project $P$ being registered,
     \item $\field{P}{k}$ is the id of the initial \emph{checkpoint} associated
         with this project, formally $k_0$. This checkpoint must always remain
         in the project ancestry,
@@ -303,8 +301,8 @@ The tuple $\tuple{\field{P}{org}, \field{P}{name}}$ is also known as $\field{P}{
 \end{itemize}
 \validation
 \begin{itemize}
-    \item $\field{P}{org}$ identifies an existing org $O$,
-    \item $\tuple{\field{P}{org}, \field{P}{name}}$ is globally unique,
+    \item $\field{P}{id}$ is globally unique,
+    \item $\field{\Upsilon}{id}$ identifies an existing user or org,
     \item $\field{P}{name}$ complies with the
         following rules:
         \begin{itemize}
@@ -319,30 +317,29 @@ The tuple $\tuple{\field{P}{org}, \field{P}{name}}$ is also known as $\field{P}{
 \end{itemize}
 \outputs
 \begin{itemize}
-    \item $P \in \field{O}{projs}$, where $\field{O}{id} = \field{P}{org}$,
+    \item $P \in \field{\Upsilon}{projs}$,
     \item $\alpha_{bal'} = \alpha_{bal} - \deposit{register-project}$.
 \end{itemize}}
 
 \subsection{Unregistering}
 \[
-    \tx{unregister-project}{\field{P}{org}, \field{P}{name}}
+    \tx{unregister-project}{\field{P}{id}}
 \]
 
 \spec{
 \inputs
 \begin{itemize}
-    \item $\field{P}{name}$ is the project name being unregistered,
-    \item $\field{P}{org}$ is the id of the org under which $P$ lives,
+    \item $\field{P}{id}$ is the unique identifier of the project being
+        unregistered.
 \end{itemize}
 \validation
 \begin{itemize}
-    \item $\field{P}{org}$ identifies an existing org $O$,
-    \item $P \in \field{O}{projs}$,
+    \item $\field{P}{id}$ refers to an existing project under an org or user $\Upsilon$,
     \item The transaction author is authorized to execute \txname{unregister-project}.
 \end{itemize}
 \outputs
 \begin{itemize}
-    \item $P \notin \field{O}{projs}$,
+    \item $P \notin \field{\Upsilon}{projs}$,
     % TODO: Does the deposit go back to the org account instead?
     \item $\alpha_{bal'} = \alpha_{bal} + \deposit{register-project}$.
 \end{itemize}}
