@@ -1,5 +1,8 @@
 #!/bin/sh
 
+file="rad-registry-spec-$(git rev-parse --short HEAD).pdf"
+
 mkdir -p out
 pdflatex -output-directory=out -interaction=errorstopmode -halt-on-error main.tex
-cp out/main.pdf out/rad-registry-spec-$(git rev-parse --short HEAD).pdf
+cp out/main.pdf out/$file
+ln -sf $file out/rad-registry-spec-master.pdf
