@@ -7,17 +7,11 @@
 
 \usepackage{amsmath, amssymb}
 \usepackage{eucal}
-\usepackage{multicol}
 \usepackage{enumitem}
 \usepackage{mathtools}
-\usepackage{amsaddr}
 \usepackage{standalone}
 \usepackage{caption}
 
-\usepackage{stmaryrd}
-\usepackage[noend]{algpseudocode}
-
-\def\netgraph{\mathcal{N}}
 \def\accounts{\mathcal{A}}
 \def\txs{\mathcal{T}}
 \def\projects{\mathcal{P}}
@@ -28,18 +22,10 @@
 \def\state{\mathcal{S}}
 \def\ledger{\mathcal{L}}
 \def\contributors{\mathcal{C}}
-\def\miners{\mathcal{M}}
 \def\registry{\mathcal{R}}
-\def\pending{\mathcal{\rho}}
 \def\bal{\mathsf{bal}}
-\def\depend{\mathsf{depend}}
-\def\undepend{\mathsf{undepend}}
-\def\epoch{\kappa}
-\def\pagerank{PageRank}
-\def\protocol{\Phi}
 \def\nat{\mathbb{N}}
 \def\bin{\mathbb{B}}
-\def\distribution{\tuple{\field{A}{id}, \mathbb{N}}}
 \def\origin{\alpha}
 \def\projectid{\tuple{\field{\Upsilon}{id}, \field{P}{name}}}
 
@@ -70,8 +56,6 @@
     \smallskip
 }
 
-\algrenewcommand\algorithmicprocedure{\textbf{handler}}
-
 % No paragraph indentation after section headers.
 \makeatletter
 \let\@afterindenttrue\@afterindentfalse
@@ -82,9 +66,6 @@
 \setlist[enumerate]{leftmargin=0.8cm, labelindent=\parindent}
 
 \def\labelitemi{--}
-
-\raggedcolumns
-\calclayout
 
 \makeatletter
 \let\@wraptoccontribs\wraptoccontribs
