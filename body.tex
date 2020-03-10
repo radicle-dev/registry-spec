@@ -309,8 +309,9 @@ context of an org.
         following rules:
         \begin{itemize}
             \item Must be between $1$ and $32$ ASCII-encoded characters.
-            \item Must only contain \texttt{a-z}, \texttt{0-9}, `\texttt{-}'
-                and `\texttt{\_}' characters.
+            \item May only contain \texttt{a-z}, \texttt{0-9}, `\texttt{-}',
+                `\texttt{.}' and `\texttt{\_}' characters.
+            \item Must not equal `\texttt{.}' or `\texttt{..}'.
         \end{itemize}
     \item $\field{P}{k}$ represents an existing checkpoint,
     \item $\field{P}{meta}$ is $\leq 128$ bytes long,
