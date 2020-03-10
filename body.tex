@@ -117,6 +117,7 @@ and funds. An org $O$ is a tuple:
             \item Must not start or end with a `\texttt{-}'.
             \item Must not contain sequences of more than one `\texttt{-}'.
         \end{itemize}
+    \item $\alpha$ is associated with a registered user $u$.
     \item $\field{\alpha}{bal} \geq \deposit{register-org}$.
 \end{itemize}
 \outputs
@@ -124,7 +125,7 @@ and funds. An org $O$ is a tuple:
     \item $O \in \orgs$, where $O =
         \tuple{\field{O}{id},
             \field{O}{account},
-            \{\field{\origin}{id}\},
+            \{\field{u}{id}\},
             \varnothing,
             \field{O}{contract}}$
     \item $\field{O}{account} \in \accounts$,
@@ -144,8 +145,9 @@ and funds. An org $O$ is a tuple:
 \validation
 \begin{itemize}
     \item $O \in \orgs$,
-    \item $\field{O}{members} = \{\field{\origin}{id}\}$, the transaction origin must be the
-        only member,
+    \item $\field{O}{members} = \{\field{u}{id}\}$ where $u$ is the user associated
+        with the origin $\origin$; in other words the transacting
+        user is the only remaining member,
     \item $\field{O}{projs} = \varnothing$, there must be no projects under the
         org,
 \end{itemize}
@@ -157,48 +159,48 @@ and funds. An org $O$ is a tuple:
 
 \subsection{Registering members}
 \[
-    \tx{register-member}{\field{O}{id}, \field{A}{id}}
+    \tx{register-member}{\field{O}{id}, \field{U}{id}}
 \]
 
 \spec{
 \inputs
 \begin{itemize}
-    \item $\field{A}{id}$ is the account id being registered as a member,
-    \item $\field{O}{id}$ is the id of the org under which to register $A$,
+    \item $\field{O}{id}$ is the id of the org under which to register $U$,
+    \item $\field{U}{id}$ is the user id being registered as a member,
 \end{itemize}
 \validation
 \begin{itemize}
     \item $O \in \orgs$,
-    \item $\field{A}{id}$ must not already be registered under $O$, or $\field{A}{id} \notin \field{O}{members}$
+    \item $\field{U}{id}$ must not already be registered under $O$, or $\field{U}{id} \notin \field{O}{members}$
     \item The transaction author is authorized to execute \txname{register-member},
     \item $\alpha_{bal} \geq \deposit{register-member}$.
 \end{itemize}
 \outputs
 \begin{itemize}
-    \item $\field{A}{id} \in \field{O}{members}$,
+    \item $\field{U}{id} \in \field{O}{members}$,
     \item $\alpha_{bal'} = \alpha_{bal} - \deposit{register-member}$.
 \end{itemize}}
 
 \subsection{Unregistering members}
 \[
-    \tx{unregister-member}{\field{O}{id}, \field{A}{id}}
+    \tx{unregister-member}{\field{O}{id}, \field{U}{id}}
 \]
 
 \spec{
 \inputs
 \begin{itemize}
     \item $\field{O}{id}$ is the id of the org under which the member is registered,
-    \item $\field{A}{id}$ is the account id of the member being unregistered,
+    \item $\field{U}{id}$ is the user id of the member being unregistered,
 \end{itemize}
 \validation
 \begin{itemize}
     \item $O \in \orgs$,
-    \item $\field{A}{id} \in \field{O}{members}$,
+    \item $\field{U}{id} \in \field{O}{members}$,
     \item The transaction author is authorized to execute \txname{unregister-member}.
 \end{itemize}
 \outputs
 \begin{itemize}
-    \item $\field{A}{id} \notin \field{O}{members}$,
+    \item $\field{U}{id} \notin \field{O}{members}$,
     \item $\alpha_{bal'} = \alpha_{bal} + \deposit{register-member}$.
 \end{itemize}}
 
@@ -413,6 +415,7 @@ single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
 \[
     U = \tuple{\field{U}{id}, \field{U}{account}, \field{U}{keys}, \field{U}{meta}, \field{U}{projs}}
 \]
+
 \spec{
     \definition
     \begin{itemize}
@@ -423,6 +426,10 @@ single, unique identifier, $\field{U}{id}$. The set of all users is $\users$.
         \item $\field{U}{meta}$ is associated user metadata.
         \item $\field{U}{projs}$ is the set of registered projects under this user,
     \end{itemize}}
+
+\noindent There can only ever be {\em one} account associated to a user.
+Therefore, it is possible for an {\em account id} to uniquely identify a
+user, but not all accounts are associated to users.
 
 \subsection{Registering}
 We register a new user identity and thus user
@@ -449,6 +456,9 @@ We register a new user identity and thus user
             \item Must not start or end with a `\texttt{-}'.
             \item Must not contain sequences of more than one `\texttt{-}'.
         \end{itemize}
+    \item $\field{\alpha}{id}$ must not already be associated with a registered
+        user.  In other words, there is no user $u \in \users$ where
+        $\field{u}{account} \equiv \field{\alpha}{id}$.
     \item $\field{U}{meta}$ is $\leq 128$ bytes long,
     \item $\field{\alpha}{bal} \geq \deposit{register-user}$.
 \end{itemize}
