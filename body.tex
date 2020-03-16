@@ -483,6 +483,8 @@ We register a new user identity and thus user
 \validation
 \begin{itemize}
     \item $U \in \users$,
+    \item $U$ must not be registered as a member in any org. In other words
+        there must be no org $O \in \orgs$ such that $\field{U}{id} \in \field{O}{members}$.
     \item $\origin$ must be the owner of this identity, in other words $\field{U}{account} \equiv \field{\origin}{id}$,
 \end{itemize}
 \outputs
