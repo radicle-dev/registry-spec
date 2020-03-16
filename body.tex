@@ -172,6 +172,7 @@ and funds. An org $O$ is a tuple:
 \begin{itemize}
     \item $O \in \orgs$,
     \item $\field{U}{id}$ must not already be registered under $O$, or $\field{U}{id} \notin \field{O}{members}$
+    \item $\field{U}{id}$ must represent an existing registered user $U$, or $U \in \users$,
     \item The transaction author is authorized to execute \txname{register-member},
     \item $\alpha_{bal} \geq \deposit{register-member}$.
 \end{itemize}
